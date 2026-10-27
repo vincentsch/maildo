@@ -12,6 +12,4 @@ coverage.*
 .DS_Store
 *.swp
 
-# Private planning notes live in their own repository.
-.vroni/
 /maildo
