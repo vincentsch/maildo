@@ -1,0 +1,18 @@
+{
+  "schema": "maildo-conformance-oracle/v1",
+  "provider": "outlook",
+  "present_id": "AAMkAGZpeHR1cmUtMQ==",
+  "absent_id": "AAMkAGZpeHR1cmUtbWlzc2luZw==",
+  "mutation_destination": "archive",
+  "shared_field_allowlist": [
+    "account",
+    "provider",
+    "id",
+    "display_name",
+    "path",
+    "well_known_name",
+    "total_count",
+    "unread_count",
+    "child_count"
+  ]
+}

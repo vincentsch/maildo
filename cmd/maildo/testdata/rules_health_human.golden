@@ -1,0 +1,8 @@
+2 rules (work)
+
+"Move client mail" (order 1, id rule-move-client): ok
+"Forward alerts" (order 2, id rule-forward-alert): warning
+  info     Rule is disabled. (is_enabled)
+  info     Rule uses a provider field that maildo preserves but does not edit. (actions.forwardTo)
+  warning  Rule forwards messages. (actions.forward_to)
+  warning  Rule targets a recipient outside the account email domain. (actions.forward_to)

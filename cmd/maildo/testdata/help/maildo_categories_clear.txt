@@ -1,0 +1,48 @@
+Remove categories from messages (on Gmail, your own labels)
+
+Related commands:
+  categories list
+  categories set
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo categories clear [id...] [flags]
+
+Examples:
+maildo categories clear --id 3c1f2a7 --account work
+maildo categories clear --id 3c1f2a7 --id 9be01c4 --category Client
+maildo categories clear --query "invoice" --all --category Bills --apply --json
+
+Flags:
+      --account stringArray    Account to use (default: the active account)
+      --all                    With --query, use every match, up to --max-targets
+      --apply                  Make the change; without it, a change to more than one message only shows a preview
+      --category stringArray   Category name (repeatable)
+      --first                  With --query, the same as --latest
+      --folder string          With --query, search only this folder; without it, Sent, Drafts, Trash and Junk are left out (restore looks only in Trash and Junk)
+  -h, --help                   help for clear
+      --id stringArray         Message id, or a short id from list or search (repeatable)
+      --ids-file string        Read message ids from a file, one per line, or from stdin with -
+      --internet-id string     Message-ID header of the message, such as <id@example.com>
+      --latest                 With --query, use the newest match
+      --max-targets int        Most messages --all may pick, at most 1000 (default 100)
+      --query string           Search for messages; use with --all, --latest or --first
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)

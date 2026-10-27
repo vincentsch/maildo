@@ -1,0 +1,53 @@
+Send a new message
+
+Related commands:
+  draft create
+  draft send
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo send [flags]
+
+Examples:
+maildo send --to client@example.com --subject "Quote" --body "Message body"
+maildo send --to client@example.com --subject "Quote" --body "Message body" --dry-run
+maildo send --account work --to client@example.com --subject "Quote" --body "Message body" --approve k7q2m9xd --yes
+maildo send --to client@example.com --subject "Quote" --body-file quote.txt --attach quote.pdf --dry-run --json
+
+Flags:
+      --account stringArray    Account to use (default: the active account)
+      --approve string         Approval code from the --dry-run preview; maildo sends only if the message still matches it, and only once
+      --attach stringArray     File to attach (repeatable)
+      --bcc stringArray        Bcc recipient; repeat the flag or separate addresses with commas
+      --body string            Message body as text
+      --body-file string       Read the message body from a file, or from stdin with -
+      --cc stringArray         Cc recipient; repeat the flag or separate addresses with commas
+      --from string            Sender, such as "Ann <ann@example.com>"; the address must be the account's own
+      --full                   Show the whole body in the preview, also when it is long
+  -h, --help                   help for send
+      --html                   Write the body in HTML; maildo removes unsafe parts
+      --markdown               Write the body in Markdown; maildo turns it into HTML
+      --reply-to stringArray   Reply-To address; repeat the flag or separate addresses with commas
+      --subject string         Message subject
+      --text                   Write the body as plain text
+      --to stringArray         To recipient; repeat the flag or separate addresses with commas
+      --yes                    Send without asking; needs --approve unless the account allows unattended sends
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)

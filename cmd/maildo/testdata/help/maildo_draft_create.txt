@@ -1,0 +1,51 @@
+Save a new draft
+
+Related commands:
+  draft read
+  draft update
+  draft send
+  send
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo draft create [flags]
+
+Examples:
+maildo draft create --to client@example.com --subject "Quote" --body "Draft body"
+maildo draft create --account work --to client@example.com --body-file draft.md --markdown
+maildo draft create --to client@example.com --subject "Quote" --json
+maildo draft create --to client@example.com --body "Preview" --dry-run
+
+Flags:
+      --account stringArray    Account to use (default: the active account)
+      --bcc stringArray        Bcc recipient; repeat the flag or separate addresses with commas
+      --body string            Message body as text
+      --body-file string       Read the message body from a file, or from stdin with -
+      --cc stringArray         Cc recipient; repeat the flag or separate addresses with commas
+      --from string            Sender, such as "Ann <ann@example.com>"; the address must be the account's own
+  -h, --help                   help for create
+      --html                   Write the body in HTML; maildo removes unsafe parts
+      --markdown               Write the body in Markdown; maildo turns it into HTML
+      --reply-to stringArray   Reply-To address; repeat the flag or separate addresses with commas
+      --subject string         Message subject
+      --text                   Write the body as plain text
+      --to stringArray         To recipient; repeat the flag or separate addresses with commas
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)

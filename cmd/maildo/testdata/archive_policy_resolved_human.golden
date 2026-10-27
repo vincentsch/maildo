@@ -1,0 +1,16 @@
+Archive settings for work (outlook)
+Report: partial. Mailbox type: user.
+
+Archive folder
+  The folder Outlook's Archive button moves mail to. It is not the Exchange Online Archive mailbox.
+  Name:        Archive
+  Messages:    0
+  Unread:      0
+  Subfolders:  0
+  ID:          AAMk...
+
+Exchange Online Archive
+  maildo cannot tell whether this mailbox has one, because Microsoft Graph's mail API does not show it.
+
+Retention policy (Exchange MRM)
+  maildo cannot tell which retention policy applies, because only an Exchange Online administrator can see it.

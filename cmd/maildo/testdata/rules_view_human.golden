@@ -1,0 +1,15 @@
+Rule "Move client mail" in work (fake)
+
+Order: 1
+State: on
+Conditions (all must match; a list matches when any value does):
+  From: client@example.test
+  Subject contains: invoice, contract
+Exceptions: none
+Actions:
+  Move to folder: Clients/ACME (id acme-id)
+  Mark as read: yes
+  Stop other rules: yes
+Fields maildo cannot edit: none
+Health: ok
+ID: rule-move-client

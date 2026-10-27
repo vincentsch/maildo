@@ -1,0 +1,2 @@
+work	fake	inbox	rule-move-client	1	enabled	Move client mail
+work	fake	inbox	rule-forward-alert	2	disabled	Forward alerts

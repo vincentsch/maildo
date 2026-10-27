@@ -1,0 +1,38 @@
+{
+  "scope": "single",
+  "accounts": [
+    {
+      "name": "work",
+      "provider": "outlook",
+      "email": "work@example.test",
+      "active": true
+    }
+  ],
+  "account": "work",
+  "provider": "outlook",
+  "status": "partial",
+  "mailbox_purpose": "user",
+  "archive_folder_id": "AAMk...",
+  "archive_folder": {
+    "id": "AAMk...",
+    "display_name": "Archive",
+    "total_item_count": 0,
+    "total_item_count_known": true,
+    "unread_item_count": 0,
+    "unread_item_count_known": true,
+    "child_folder_count": 0,
+    "child_folder_count_known": true
+  },
+  "online_archive": {
+    "status": "unavailable",
+    "reason": "not_exposed_by_graph_mail_api"
+  },
+  "retention_policy": {
+    "status": "unavailable",
+    "reason": "requires_exchange_online_admin_context"
+  },
+  "warnings": [],
+  "provider_metadata": {
+    "source": "microsoft_graph"
+  }
+}

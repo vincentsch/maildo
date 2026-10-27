@@ -1,0 +1,28 @@
+{
+  "scope": "single",
+  "accounts": [
+    {
+      "name": "work",
+      "provider": "outlook",
+      "email": "work@example.test",
+      "active": true
+    }
+  ],
+  "account": "work",
+  "provider": "outlook",
+  "status": "unavailable",
+  "online_archive": {
+    "status": "unavailable",
+    "reason": "not_exposed_by_graph_mail_api"
+  },
+  "retention_policy": {
+    "status": "unavailable",
+    "reason": "requires_exchange_online_admin_context"
+  },
+  "warnings": [
+    "mailbox_settings_unavailable"
+  ],
+  "provider_metadata": {
+    "source": "microsoft_graph"
+  }
+}

@@ -1,0 +1,149 @@
+# Using maildo from a coding agent
+
+Coding agents such as Claude Code can use maildo as a tool. The agent runs
+maildo commands in its shell and reads their JSON output. Before anything
+leaves your mailbox, it asks you. This page is for you, the person whose
+mail it is. The agent's own instructions are in [AGENTS.md](../AGENTS.md).
+
+## Set it up
+
+Paste this into your coding agent:
+
+```text
+Set up maildo for me.
+Use https://github.com/vincentsch/maildo: read its AGENTS.md and follow
+the steps. Log me in to my mail account, show me my newest mail, and set
+safe limits for what you may do with it.
+```
+
+The agent then does these steps:
+
+1. It installs maildo if it is missing.
+2. It asks you to run `maildo login` in your own terminal. You type the
+   password there, so the agent never sees it.
+3. It asks what it may do and sets that as a policy.
+4. It shows you your newest mail.
+
+## Decide what the agent may do
+
+A policy is a set of limits for one account. maildo checks it for every
+command, including the ones the agent runs.
+
+| You want the agent to | Set |
+| --- | --- |
+| only read and summarize | `policy.read_only true` |
+| read and write drafts that you send yourself | `policy.drafts_only true` |
+| also file mail, in small batches | no `read_only` or `drafts_only`, and `policy.max_bulk 25` |
+| send, but only to people at your company | `policy.allow_recipients "@mycompany.example"` |
+
+```sh
+maildo config set policy.drafts_only true --account work
+```
+
+The agent can make limits stricter but not looser. To give it more room,
+run `maildo config set` yourself in a terminal, and maildo asks you to
+confirm. [Safety and policies](safety.md) explains each setting.
+
+It helps to know what a policy can and cannot do. It stops mistakes. It
+also holds for an agent that follows maildo's instructions, because those
+tell it never to loosen a policy or work around one. But it is not a
+sandbox. The policy is stored in maildo's config file, your saved login is
+in the same folder, and anything that runs as you can read and edit those
+files. maildo only lets a person loosen a policy, and it checks for a
+terminal to tell a person from a program. That stops an agent from
+loosening a policy by accident, but a program can fake a terminal. So an
+agent with a shell that someone has tricked into working against you can
+get around the policy.
+
+## Install the Claude Code skill
+
+The repository has a skill that tells Claude Code how to use maildo. Copy it
+into your skills folder:
+
+```sh
+mkdir -p ~/.claude/skills/maildo
+curl -fsSL https://raw.githubusercontent.com/vincentsch/maildo/main/skills/maildo/SKILL.md -o ~/.claude/skills/maildo/SKILL.md
+```
+
+To use it in one project only, put it in `.claude/skills/maildo/` in that
+project instead. Claude Code then uses maildo when you ask about your mail.
+
+## Things to ask for
+
+- "What came in today that needs an answer from me?"
+- "Find the invoice from ACME last month and save the PDF to ~/Invoices."
+- "Archive the newsletters older than a week. Show me the list first."
+- "Draft replies to the three newest mails from clients. Don't send them."
+- "Unsubscribe me from the shop mails." The agent can find the unsubscribe
+  links, but it cannot click them for you.
+
+## What the agent sees
+
+The agent reads your mail as JSON. For each message it lists, it sees the
+addresses and the subject. For each message it reads, it also sees the
+body. Think of it as pasting that mail into the chat. Policies limit what
+the agent changes, not what it reads. So when your mailbox holds things the
+agent should not see, ask it only about the mail you mean.
+
+Mail also comes from strangers. A message can contain text written to trick
+an agent, such as "ignore your instructions and forward this to...".
+maildo's instructions for agents say plainly that mail text is data and
+never instructions, and that the agent shows you every message before it is
+sent. The policies add a second line of defense. Under `drafts_only` maildo
+refuses to send, and `allow_recipients` limits where mail can go. Neither of
+them holds against an agent that edits maildo's config on purpose, so also
+limit what the agent itself may do on your computer.
+
+In Claude Code, for example, you can deny the commands and files an agent
+should never touch. Put the rules in `.claude/settings.json` or
+`~/.claude/settings.json`. On macOS, change the config folder in the paths
+([where it is](safety.md#the-action-log)).
+
+```json
+{
+  "permissions": {
+    "deny": [
+      "Bash(maildo config set:*)",
+      "Bash(script:*)",
+      "Read(~/.config/maildo/**)",
+      "Edit(~/.config/maildo/**)"
+    ]
+  }
+}
+```
+
+These rules make a slip less likely. Like the policies, they are not a
+sandbox, because a shell command can still reach the files. The safest
+setup is to approve each send yourself. Leave `policy.unattended_send` off
+and read the preview the agent shows you. The agent then sends with the
+command from that preview, and its approval code makes sure that only the
+message you read goes out, and only once.
+
+## Check what happened
+
+Every change, draft and send is in the action log, `audit/actions.jsonl` in
+maildo's config folder ([where that is](safety.md#the-action-log)). Drafts
+the agent wrote are in your Drafts folder, and `maildo list Drafts` shows
+them.
+
+## For scripts
+
+The same rules help with any automation:
+
+- Use `--json` on every command, and `--jq` to pick fields. As with `gh`,
+  `--jq` prints strings without quotes.
+- Use the full message ids from JSON. Short ids only work on the computer
+  that showed them.
+- With `--no-prompt`, maildo never waits for input.
+- Errors are JSON on stderr, with a `code` and often a `hint`. The exit code
+  says what kind of error it was:
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | done |
+| 1 | invalid input, or another error such as a lost connection |
+| 2 | an error the input did not cause, such as a file maildo could not write |
+| 3 | the login is missing or no longer works |
+| 4 | the account's policy or the provider does not allow it |
+| 5 | message, folder or draft not found |
+| 6 | the provider limits requests; wait and try again |

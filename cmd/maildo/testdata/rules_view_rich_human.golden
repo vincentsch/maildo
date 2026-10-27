@@ -1,0 +1,39 @@
+Rule "Move client mail" in work (outlook)
+
+Order: 1
+State: on
+Conditions (all must match; a list matches when any value does):
+  From: client@example.test
+  Subject contains: invoice, contract
+  Body contains: body
+Exceptions (all must match; a list matches when any value does):
+  Subject contains: skip
+Actions:
+  Move to folder: Clients/ACME (id acme-id)
+  Copy to folder: Archive (id archive-id)
+  Mark as read: yes
+  Stop other rules: yes
+  Add categories: Review
+  Set importance: low
+  Forward to: ops@external.test
+Fields maildo cannot edit (they stay as they are):
+  actions.assignCategories: preserved documented provider field
+  actions.copyToFolder: preserved documented provider field
+  actions.forwardTo: preserved documented provider field
+  actions.markImportance: preserved documented provider field
+  actions.providerAction: unknown provider object with 1 field(s)
+  conditions.bodyContains: preserved documented provider field
+  conditions.providerPredicate: unknown provider array with 1 item(s)
+  exceptions.exceptionFuture: unknown provider string
+Health:
+  info     Rule uses a provider field that maildo preserves but does not edit. (actions.assignCategories)
+  info     Rule uses a provider field that maildo preserves but does not edit. (actions.copyToFolder)
+  info     Rule uses a provider field that maildo preserves but does not edit. (actions.forwardTo)
+  info     Rule uses a provider field that maildo preserves but does not edit. (actions.markImportance)
+  info     Rule uses a provider field that maildo preserves but does not edit. (actions.providerAction)
+  info     Rule uses a provider field that maildo preserves but does not edit. (conditions.bodyContains)
+  info     Rule uses a provider field that maildo preserves but does not edit. (conditions.providerPredicate)
+  info     Rule uses a provider field that maildo preserves but does not edit. (exceptions.exceptionFuture)
+  warning  Rule forwards messages. (actions.forward_to)
+  warning  Rule targets a recipient outside the account email domain. (actions.forward_to)
+ID: rule-move-client

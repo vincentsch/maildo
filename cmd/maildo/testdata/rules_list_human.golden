@@ -1,0 +1,5 @@
+2 rules (work)
+
+ORDER  NAME              STATE  ACTIONS                                               HEALTH   ID
+1      Move client mail  on     move to Clients/ACME, mark as read, stop other rules  ok       rule-move-client
+2      Forward alerts    off    forward to 1 address                                  warning  rule-forward-alert

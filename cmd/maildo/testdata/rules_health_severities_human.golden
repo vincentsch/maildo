@@ -1,0 +1,10 @@
+4 rules (work)
+
+"Healthy" (order 1, id healthy): ok
+"Disabled" (order 2, id disabled): info
+  info     Rule is disabled. (is_enabled)
+"Forward" (order 3, id forward): warning
+  warning  Rule forwards messages. (actions.forward_to)
+  warning  Rule targets a recipient outside the account email domain. (actions.forward_to)
+"Provider error" (order 4, id provider-error): error
+  error    Provider reports an error for this rule. (has_error)

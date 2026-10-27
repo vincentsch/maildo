@@ -1,0 +1,50 @@
+Create an Inbox rule
+
+Related commands:
+  rules list
+  rules view
+  folders list
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo rules create [flags]
+
+Examples:
+maildo rules create --account work --subject-contains invoice --move-to Archive
+maildo rules create --from "Client <client@example.com>" --move-to Clients --mark-read --apply
+maildo rules create --sender-contains alerts --has-attachments --stop-processing --json
+
+Flags:
+      --account stringArray              Account to use (default: the active account)
+      --apply                            Create the rule; without --apply maildo only shows what it would create
+      --from stringArray                 Match mail from this address (repeatable; comma lists accepted)
+      --has-attachments                  Match messages with attachments
+      --header-contains stringArray      Match a message header that contains this text (repeatable; any value matches)
+  -h, --help                             help for create
+      --mark-read                        Mark matching messages as read
+      --move-to string                   Folder to move matching messages to
+      --name string                      Name of the rule
+      --recipient-contains stringArray   Match a recipient address that contains this text (repeatable; any value matches)
+      --sender-contains stringArray      Match a sender address that contains this text (repeatable; any value matches)
+      --sequence int                     Place in the order rules run, from 1 to 2147483647; no other rule may use it (default: after the last rule)
+      --stop-processing                  Run no later rules on a message this rule matched
+      --subject-contains stringArray     Match a subject that contains this text (repeatable; any value matches, but different conditions must all match)
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)

@@ -1,0 +1,62 @@
+Forward a message (saves a draft unless you add --send)
+
+Related commands:
+  reply
+  draft update
+  send
+  read
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo forward [id] [flags]
+
+Examples:
+maildo forward 9eac029 --to anna@example.com --body "FYI"
+maildo forward --id 3c1f2a7 --account work --to client@example.com --body-file note.md --markdown
+maildo forward --query "from:client@example.com subject:quote" --latest --to client@example.com --body "FYI" --send --dry-run
+maildo forward 9eac029 --to anna@example.com --body "FYI" --include-attachments none
+maildo forward --id 3c1f2a7 --body "Preview" --dry-run --json
+
+Flags:
+      --account stringArray                 Account to use (default: the active account)
+      --approve string                      Approval code from the --dry-run preview; maildo sends only if the message still matches it, and only once
+      --bcc stringArray                     Bcc recipient; repeat the flag or separate addresses with commas
+      --body string                         Message body as text
+      --body-file string                    Read the message body from a file, or from stdin with -
+      --cc stringArray                      Cc recipient; repeat the flag or separate addresses with commas
+      --draft                               Save the forward as a draft (the default)
+      --first                               With --query, the same as --latest
+      --full                                Show the whole body in the preview, also when it is long
+  -h, --help                                help for forward
+      --html                                Write the body in HTML; maildo removes unsafe parts
+      --id string                           Message id, or a short id from list or search
+      --include-attachment stringArray      Name of an attachment of the original to send along (repeatable)
+      --include-attachment-id stringArray   Id of an attachment of the original to send along (repeatable)
+      --include-attachments string          Which attachments of the original go along: all or none (default "all")
+      --internet-id string                  Message-ID header of the message, such as <id@example.com>
+      --latest                              With --query, use the newest match
+      --markdown                            Write the body in Markdown; maildo turns it into HTML
+      --query string                        Search for the message; use with --latest or --first
+      --send                                Send the forward instead of saving a draft
+      --text                                Write the body as plain text
+      --to stringArray                      To recipient; repeat the flag or separate addresses with commas
+      --yes                                 Send without asking; needs --approve unless the account allows unattended sends
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)

@@ -1,0 +1,50 @@
+Log in again when a saved login stopped working
+
+Related commands:
+  auth refresh
+  auth status
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo auth repair <name> [flags]
+
+Examples:
+maildo auth repair work
+maildo auth repair personal --gmail-client-id CLIENT_ID
+maildo auth repair hosted --imap-host imap.example.net --imap-port 993 --imap-tls implicit --smtp-host smtp.example.net --smtp-port 465 --smtp-tls implicit
+maildo auth repair work --device-code
+maildo auth repair work --dry-run
+maildo auth repair work --json
+
+Flags:
+      --ca-file string           Certificate authority (PEM file) to trust in addition to the system's
+      --device-code              Sign in with a code on another device, for machines without a browser
+      --email string             Your email address; maildo looks up the servers from it
+      --gmail-client-id string   Client ID of your own Google OAuth app (type Desktop app)
+  -h, --help                     help for repair
+      --imap-host string         IMAP server name, such as imap.example.com
+      --imap-port string         IMAP server port (default 993, or 143 with --imap-tls starttls)
+      --imap-tls string          IMAP TLS mode: implicit or starttls (default: from the port)
+      --smtp-host string         SMTP server name, such as smtp.example.com
+      --smtp-port string         SMTP server port (default 465, or 587 with --smtp-tls starttls)
+      --smtp-tls string          SMTP TLS mode: implicit or starttls (default: from the port)
+      --username string          Username for the IMAP and SMTP servers (default: the email address)
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)

@@ -1,0 +1,18 @@
+{
+  "schema": "maildo-conformance-oracle/v1",
+  "provider": "fastmail",
+  "present_id": "imap-message/v1/SU5CT1g/77/2",
+  "absent_id": "imap-message/v1/SU5CT1g/77/999",
+  "mutation_destination": "archive",
+  "shared_field_allowlist": [
+    "account",
+    "provider",
+    "id",
+    "display_name",
+    "path",
+    "well_known_name",
+    "total_count",
+    "unread_count",
+    "child_count"
+  ]
+}

@@ -1,0 +1,75 @@
+maildo handles your mail from the terminal. People get readable tables, and scripts and coding agents get stable JSON. A change to many messages shows a preview first, and limits you set for each account decide what a script or agent may do.
+
+Usage:
+  maildo [command]
+
+Examples:
+maildo login
+maildo list
+maildo search "from:anna invoice newer:30d"
+maildo read 4d1a2f3
+maildo archive --query "from:deals@shop.example" --all
+
+Accounts and setup
+  auth               Manage your accounts and their logins
+  config             Read and change maildo settings
+  doctor             Check an account's servers, login and folders
+  login              Log in to a mail account
+
+Folders
+  folders            List and change folders
+
+Search and read
+  list               List the newest messages in a folder
+  read               Read a message
+  search             Search your mail
+  thread             Show the messages of a conversation, with the start of each
+
+Write and send
+  draft              Write, change and send drafts
+  forward            Forward a message (saves a draft unless you add --send)
+  reply              Reply to a message (saves a draft unless you add --send)
+  send               Send a new message
+
+Attachments
+  attachments        Work with the attachments of messages and drafts
+
+Change messages
+  archive            Archive messages
+  categories         Show or replace message categories (on Gmail, your own labels)
+  copy               Copy messages to another folder (on Gmail, this adds a label)
+  delete             Move messages to Trash
+  flag               Flag messages or remove the flag
+  junk               Move messages to the Junk folder
+  mark               Mark messages as read or unread
+  move               Move messages to another folder
+  restore            Move messages back from Trash or Junk (to the inbox, or to --to)
+
+Rules
+  rules              List and change Inbox rules (Outlook)
+
+Outlook
+  outlook            Commands that only work with Outlook accounts
+
+Additional Commands:
+  completion         Generate the autocompletion script for the specified shell
+  help               Help about any command
+  update             Check for and install the latest version
+
+Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+  -h, --help              help for maildo
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)
+  -v, --version           version for maildo
+
+Use "maildo [command] --help" for more information about a command.

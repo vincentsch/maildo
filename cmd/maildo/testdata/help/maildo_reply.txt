@@ -1,0 +1,58 @@
+Reply to a message (saves a draft unless you add --send)
+
+Related commands:
+  draft create
+  send
+  read
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo reply [id] [flags]
+
+Examples:
+maildo reply 9eac029 --body "Thanks, paid today."
+maildo reply --id 3c1f2a7 --account work --body-file reply.md --markdown
+maildo reply --reply-all --id 3c1f2a7 --body "On it" --quote short
+maildo reply --query "from:client@example.com subject:quote" --latest --body "Thanks" --send --dry-run
+maildo reply --id 3c1f2a7 --body "Preview" --dry-run --json
+
+Flags:
+      --account stringArray     Account to use (default: the active account)
+      --approve string          Approval code from the --dry-run preview; maildo sends only if the message still matches it, and only once
+      --body string             Message body as text
+      --body-file string        Read the message body from a file, or from stdin with -
+      --draft                   Save the reply as a draft (the default)
+      --first                   With --query, the same as --latest
+      --full                    Show the whole body in the preview, also when it is long
+  -h, --help                    help for reply
+      --html                    Write the body in HTML; maildo removes unsafe parts
+      --id string               Message id, or a short id from list or search
+      --internet-id string      Message-ID header of the message, such as <id@example.com>
+      --latest                  With --query, use the newest match
+      --markdown                Write the body in Markdown; maildo turns it into HTML
+      --query string            Search for the message; use with --latest or --first
+      --quote string            How much of the original to quote: full, short or none (default "full")
+      --quote-language string   Language of the "On ... wrote:" line: en, de or auto (from your locale) (default "auto")
+      --reply-all               Reply to the sender and all other recipients
+      --send                    Send the reply instead of saving a draft
+      --text                    Write the body as plain text
+      --yes                     Send without asking; needs --approve unless the account allows unattended sends
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap machine output as {data, meta} (commands that expose request metadata)
+      --jq string         Transform stable JSON output with a jq expression (commands with machine output)
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --plain             Print unstyled, copy-safe text (commands with human output)
+      --quiet             Suppress non-essential output
+      --template string   Render stable JSON output through a Go text/template (commands with machine output)
