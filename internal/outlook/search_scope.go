@@ -86,8 +86,13 @@ func (s *searchScope) nameFolders(ctx context.Context, c *Client, rows []mail.Me
 	return nil
 }
 
+// wellKnownLookups is how many standard folders maildo looks up at the same
+// time. Graph answers 429 when one app sends more than four requests to the
+// same mailbox at once.
+const wellKnownLookups = 3
+
 // wellKnownFolderRows asks Graph for the standard folders by their
-// well-known names, all at once, and keys them by maildo role. A mailbox
+// well-known names, a few at a time, and keys them by maildo role. A mailbox
 // without one of them (Graph answers 404) gets no entry for it.
 func (c *Client) wellKnownFolderRows(ctx context.Context) (map[string]graphFolder, error) {
 	type answer struct {
@@ -96,11 +101,14 @@ func (c *Client) wellKnownFolderRows(ctx context.Context) (map[string]graphFolde
 		err    error
 	}
 	answers := make(chan answer, len(graphWellKnownNames))
+	slots := make(chan struct{}, wellKnownLookups)
 	var wg sync.WaitGroup
 	for role, name := range graphWellKnownNames {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			slots <- struct{}{}
+			defer func() { <-slots }()
 			var f graphFolder
 			err := c.graphGet(ctx, fmt.Sprintf("%s/me/mailFolders/%s", c.graphBaseURL, name), &f)
 			answers <- answer{role: role, folder: f, err: err}

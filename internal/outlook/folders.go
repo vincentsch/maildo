@@ -297,6 +297,9 @@ func (c *Client) graphGet(ctx context.Context, target string, v any) error {
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		return repairRequired(c.account)
 	}
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return rungrad.NewError(rungrad.ExitRateLimited, "Outlook asked maildo to slow down while it read the folders; try again in a few seconds")
+	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return c.folderError()
 	}
