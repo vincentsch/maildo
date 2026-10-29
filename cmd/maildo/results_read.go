@@ -203,7 +203,9 @@ func humanThread(f *rungrad.Factory, r threadResult) func(io.Writer) {
 			}
 			fmt.Fprintf(w, "%s  %s  %s (%s%s)\n", ids.of(row.Account, row.ID), plainField(senderName(row.From)),
 				relativeTime(threadRowTime(row)), plainField(folderSummaryText(row.Folder)), mark)
-			if preview := strings.TrimSpace(plainField(row.Preview)); preview != "" {
+			// Outlook's previews keep the line breaks of the body; one
+			// line per message reads better.
+			if preview := strings.Join(strings.Fields(plainField(row.Preview)), " "); preview != "" {
 				fmt.Fprintln(w, "  "+truncate(preview, max(width-2, 40)))
 			}
 		}
@@ -214,7 +216,8 @@ func humanThread(f *rungrad.Factory, r threadResult) func(io.Writer) {
 
 func recipientText(r mail.Recipient) string {
 	switch {
-	case r.Name != "" && r.Address != "":
+	// Outlook fills in the address as the name of a recipient who has none.
+	case r.Name != "" && r.Address != "" && !strings.EqualFold(strings.TrimSpace(r.Name), r.Address):
 		return plainField(r.Name) + " <" + plainField(r.Address) + ">"
 	case r.Address != "":
 		return plainField(r.Address)

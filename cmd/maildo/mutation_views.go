@@ -80,6 +80,10 @@ func targetLabel(t mutationTarget) string {
 	if t.Summary == nil {
 		return "message " + shortID(t.Account.Name, t.MessageID)
 	}
+	// A draft has no sender yet; "from -" would read like a folder name.
+	if strings.TrimSpace(t.Summary.From.Name) == "" && t.Summary.From.Address == "" {
+		return subjectText(t.Summary.Subject)
+	}
 	return subjectText(t.Summary.Subject) + " from " + plainField(senderName(t.Summary.From))
 }
 
