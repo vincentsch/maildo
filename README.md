@@ -81,7 +81,7 @@ Use the short ID from the first column in later commands:
 maildo read 9eac029
 maildo thread f25dbcc
 maildo search "from:billing invoice newer:30d"
-maildo attachments download --id 9eac029 --all --to ~/Downloads
+maildo attachments download 9eac029 --all --to ~/Downloads
 ```
 
 Add `--json` for scripts. The JSON has the full message ids and a short

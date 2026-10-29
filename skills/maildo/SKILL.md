@@ -47,8 +47,8 @@ maildo list --unread --json
 maildo search "from:anna invoice newer:30d" --json
 maildo read <id> --json                        # .message.body.content
 maildo thread <id> --json
-maildo attachments list --id <id> --json
-maildo attachments download --id <id> --all --to <folder> --json
+maildo attachments list <id> --json
+maildo attachments download <id> --all --to <folder> --json
 ```
 
 Search operators: `from:` `to:` `cc:` `subject:` `has:attachment`

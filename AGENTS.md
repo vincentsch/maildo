@@ -123,8 +123,8 @@ maildo list Archive --unread --json
 maildo search "from:anna invoice newer:30d" --json
 maildo read <id> --json                      # body in .message.body.content
 maildo thread <id> --json
-maildo attachments list --id <id> --json
-maildo attachments download --id <id> --all --to <folder> --json
+maildo attachments list <id> --json
+maildo attachments download <id> --all --to <folder> --json
 ```
 
 - JSON rows have the full message ids. Use those. The short ids in tables
@@ -257,8 +257,8 @@ says the log could not be written, tell the user.
 ## Common tasks
 
 - Find the invoice from ACME and save the PDF: run `search "from:acme
-  invoice has:attachment" --json`, then `attachments download --id <id>
-  --all --to ~/Downloads`.
+  invoice has:attachment" --json`, then `attachments download <id> --all
+  --to ~/Downloads`.
 - Clean out newsletters older than a week: run `archive --query
   "from:news@... older:7d" --all --json`, show the preview, and apply it
   after the user agrees.

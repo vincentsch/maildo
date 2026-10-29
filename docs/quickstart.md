@@ -82,7 +82,7 @@ Tables show a short ID for each message. Use it in the next command:
 ```sh
 maildo read 9eac029
 maildo thread 9eac029
-maildo attachments download --id 9eac029 --all --to ~/Downloads
+maildo attachments download 9eac029 --all --to ~/Downloads
 ```
 
 maildo remembers the short IDs of the last 5,000 messages it showed you on

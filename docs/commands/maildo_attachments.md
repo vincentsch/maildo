@@ -11,8 +11,8 @@ maildo attachments
 ## Examples
 
 ```
-maildo attachments list --id 3c1f2a7
-maildo attachments download --id 3c1f2a7 --attachment-id 1 --to ./attachments
+maildo attachments list 3c1f2a7
+maildo attachments download 3c1f2a7 --attachment-id 1 --to ./attachments
 maildo attachments add --draft-id 5d2e8b1 ./quote.pdf
 ```
 

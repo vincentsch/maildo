@@ -5,12 +5,13 @@ Save a message's attachments to a folder
 ## Usage
 
 ```
-maildo attachments download
+maildo attachments download [id]
 ```
 
 ## Examples
 
 ```
+maildo attachments download 3c1f2a7 --all --to ./attachments
 maildo attachments download --id 3c1f2a7 --account work --all --to ./attachments
 maildo attachments download --id 3c1f2a7 --attachment-id 1 --to ./attachments --json
 maildo attachments download --id 3c1f2a7 --name invoice.pdf --to ./attachments

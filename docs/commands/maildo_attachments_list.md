@@ -5,12 +5,13 @@ List the attachments of a message or draft
 ## Usage
 
 ```
-maildo attachments list
+maildo attachments list [id]
 ```
 
 ## Examples
 
 ```
+maildo attachments list 3c1f2a7
 maildo attachments list --id 3c1f2a7
 maildo attachments list --id 3c1f2a7 --account work --json
 maildo attachments list --internet-id "<message-id@example.com>" --account work --json

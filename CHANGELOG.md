@@ -49,6 +49,9 @@ Windows is not supported yet, but you can use maildo inside WSL.
   refused, and the error shows both.
 - A short id is never given to a second message. When maildo forgets an
   old message, its short id is refused from then on.
+- Every command that takes `--id` also takes the message id or short id as
+  an argument, like `maildo read 9eac029` or
+  `maildo attachments list 9eac029`.
 
 ### Changing and sending
 

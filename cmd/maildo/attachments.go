@@ -38,12 +38,13 @@ func newAttachmentsModule(h *handlers) attachmentsModule {
 	defs := []cmdDef{
 		{
 			path: "attachments", use: "attachments", short: "Work with the attachments of messages and drafts", groupID: "attachments",
-			examples: []string{"maildo attachments list --id 3c1f2a7", "maildo attachments download --id 3c1f2a7 --attachment-id 1 --to ./attachments", "maildo attachments add --draft-id 5d2e8b1 ./quote.pdf"},
+			examples: []string{"maildo attachments list 3c1f2a7", "maildo attachments download 3c1f2a7 --attachment-id 1 --to ./attachments", "maildo attachments add --draft-id 5d2e8b1 ./quote.pdf"},
 			related:  []string{"read", "draft read", "draft update"},
 		},
 		{
-			path: "attachments list", use: "list", short: "List the attachments of a message or draft",
+			path: "attachments list", use: "list [id]", short: "List the attachments of a message or draft",
 			examples: []string{
+				`maildo attachments list 3c1f2a7`,
 				`maildo attachments list --id 3c1f2a7`,
 				`maildo attachments list --id 3c1f2a7 --account work --json`,
 				`maildo attachments list --internet-id "<message-id@example.com>" --account work --json`,
@@ -53,7 +54,8 @@ func newAttachmentsModule(h *handlers) attachmentsModule {
 			related:      []string{"attachments download", "attachments add", "attachments remove", "read", "draft read"},
 			outputModes:  listModes,
 			supportsMeta: true,
-			args:         cobra.NoArgs,
+			args:         cobra.MaximumNArgs(1),
+			idArg:        true,
 			configure: func(cmd *cobra.Command) {
 				provider.ConfigureAccountFlags(cmd, provider.ScopeRequest{Mode: provider.ModeMulti, AllowAll: true})
 				cmd.Flags().String("draft-id", "", "Draft id, or a short id from maildo")
@@ -62,8 +64,9 @@ func newAttachmentsModule(h *handlers) attachmentsModule {
 			run: h.attachmentsList,
 		},
 		{
-			path: "attachments download", use: "download", short: "Save a message's attachments to a folder",
+			path: "attachments download", use: "download [id]", short: "Save a message's attachments to a folder",
 			examples: []string{
+				`maildo attachments download 3c1f2a7 --all --to ./attachments`,
 				`maildo attachments download --id 3c1f2a7 --account work --all --to ./attachments`,
 				`maildo attachments download --id 3c1f2a7 --attachment-id 1 --to ./attachments --json`,
 				`maildo attachments download --id 3c1f2a7 --name invoice.pdf --to ./attachments`,
@@ -74,7 +77,8 @@ func newAttachmentsModule(h *handlers) attachmentsModule {
 			outputModes:  resultModes,
 			mutates:      true,
 			supportsMeta: true,
-			args:         cobra.NoArgs,
+			args:         cobra.MaximumNArgs(1),
+			idArg:        true,
 			configure: func(cmd *cobra.Command) {
 				provider.ConfigureAccountFlags(cmd, provider.ScopeRequest{Mode: provider.ModeSingle})
 				messageSelectorFlags(cmd)

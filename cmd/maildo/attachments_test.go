@@ -287,6 +287,44 @@ func TestMessageAttachmentsListSelectorsPlainAndMeta(t *testing.T) {
 	}
 }
 
+// Like read, attachments list and download take the message id or a short id
+// as their argument.
+func TestAttachmentsTakeTheMessageIDAsAnArgument(t *testing.T) {
+	h, _ := seededMessageAttachmentHarness(t)
+
+	var byArg messageAttachmentsResult
+	decodeOK(t, h.run("attachments", "list", "work-new", "--json"), &byArg)
+	if byArg.SourceID != "work-new" || byArg.Count != len(messageAttachmentRows()) {
+		t.Fatalf("list by argument = %#v", byArg)
+	}
+
+	// list and search remember the short ids they print.
+	ids, err := saveShortIDs(filepath.Join(h.root, "short-ids.json"), []shortIDEntry{messageRef("work", "work-new")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	short := ids.of("work", "work-new")
+	var byShort messageAttachmentsResult
+	decodeOK(t, h.run("attachments", "list", short, "--json"), &byShort)
+	if byShort.SourceID != "work-new" || byShort.Count != byArg.Count {
+		t.Fatalf("list by short id = %#v", byShort)
+	}
+
+	dir := filepath.Join(t.TempDir(), "saved")
+	var saved messageAttachmentDownloadResult
+	decodeOK(t, h.run("attachments", "download", short, "--attachment-id", "att-file", "--to", dir, "--json"), &saved)
+	if saved.DownloadedCount != 1 {
+		t.Fatalf("download by short id = %#v", saved)
+	}
+	if got, err := os.ReadFile(filepath.Join(dir, "report.pdf")); err != nil || string(got) != "report bytes" {
+		t.Fatalf("saved file = %q err=%v", got, err)
+	}
+
+	assertFrameworkUsage(t, h.run("attachments", "list", "work-new", "--id", "work-new", "--json"))
+	assertFrameworkUsage(t, h.run("attachments", "list", "work-new", "work-old", "--json"))
+	assertErrorCode(t, h.run("attachments", "list", "work-new", "--draft-id", "seed-draft", "--json"), errs.CodeInvalidSelector)
+}
+
 func TestMessageAttachmentsListEscapesProviderFields(t *testing.T) {
 	rows := []mail.Attachment{{
 		ID:           "id\tone",
