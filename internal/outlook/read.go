@@ -375,7 +375,9 @@ func (c *Client) fetchConversationMessages(ctx context.Context, conv string) ([]
 // fetchAttachments lists a message's attachments, without their content.
 func (c *Client) fetchAttachments(ctx context.Context, id string, notFound func() error) ([]mail.Attachment, error) {
 	values := url.Values{}
-	values.Set("$select", "id,name,contentType,size,isInline,contentId")
+	// contentId exists only on file attachments. Graph refuses the plain
+	// name with 400, so it must carry the type.
+	values.Set("$select", "id,name,contentType,size,isInline,microsoft.graph.fileAttachment/contentId")
 	next := withQuery(c.graphBaseURL+"/me/messages/"+url.PathEscape(id)+"/attachments", values)
 	out := make([]mail.Attachment, 0)
 	var pages graphPageGuard

@@ -25,7 +25,7 @@ func TestOutlookMessageAttachmentsListMetadataRequest(t *testing.T) {
 	if req.Method != http.MethodGet || req.Path != "/me/messages/download-source/attachments" {
 		t.Fatalf("metadata request = %#v", req)
 	}
-	if got := req.Query.Get("$select"); got != "id,name,contentType,size,isInline,contentId" ||
+	if got := req.Query.Get("$select"); got != "id,name,contentType,size,isInline,microsoft.graph.fileAttachment/contentId" ||
 		strings.Contains(got, "contentBytes") || strings.Contains(got, "@odata.type") {
 		t.Fatalf("metadata select = %q", got)
 	}

@@ -1818,6 +1818,15 @@ func (s *cliOutlookServer) handleMessageItem(w http.ResponseWriter, r *http.Requ
 			http.Error(w, "bad method", http.StatusMethodNotAllowed)
 			return
 		}
+		// Graph answers like this when $select names a property of a
+		// derived attachment type without its type (seen on 2026-10-29).
+		for _, field := range strings.Split(r.URL.Query().Get("$select"), ",") {
+			if field == "contentId" {
+				w.WriteHeader(http.StatusBadRequest)
+				writeCLIJSON(w, map[string]any{"error": map[string]any{"code": "BadRequest", "message": "Parsing OData Select and Expand failed: Could not find a property named 'contentId' on type 'microsoft.graph.attachment'."}})
+				return
+			}
+		}
 		switch messageID {
 		case "attachments-missing":
 			http.NotFound(w, r)
