@@ -45,10 +45,13 @@ var readMessageBodySelect = strings.Join([]string{
 }, ",")
 
 // threadMessageSelect leaves out the body, so one large message cannot make
-// a thread view fail.
+// a thread view fail. It asks for toRecipients although the thread view does
+// not show them: without them, Graph can send the sender of a message that
+// was sent over SMTP as an Exchange address (/O=EXCHANGELABS/...) instead of
+// a mail address.
 var threadMessageSelect = strings.Join([]string{
 	"id", "internetMessageId", "conversationId", "parentFolderId", "subject",
-	"from", "receivedDateTime", "sentDateTime", "isRead", "importance",
+	"from", "toRecipients", "receivedDateTime", "sentDateTime", "isRead", "importance",
 	"hasAttachments", "bodyPreview",
 }, ",")
 
@@ -160,6 +163,7 @@ func (c *Client) ReadMessage(ctx context.Context, req mail.ReadMessageRequest) (
 		return mail.Message{}, err
 	}
 	msg := c.toMessage(g, body)
+	msg.Folder = c.folderName(ctx, msg.Folder.ID)
 	if msg.HasAttachments {
 		attachments, err := c.fetchAttachments(ctx, msg.ID, func() error { return c.messagesError() })
 		if err != nil {
@@ -190,7 +194,9 @@ func (c *Client) ReadThread(ctx context.Context, req mail.ReadThreadRequest) (ma
 	}
 	messages := make([]mail.ThreadMessage, 0, len(rows))
 	for _, row := range rows {
-		messages = append(messages, c.toThreadMessage(row))
+		m := c.toThreadMessage(row)
+		m.Folder = c.folderName(ctx, m.Folder.ID)
+		messages = append(messages, m)
 	}
 	sort.SliceStable(messages, func(i, j int) bool {
 		ti, tj := outlookThreadTime(messages[i]), outlookThreadTime(messages[j])

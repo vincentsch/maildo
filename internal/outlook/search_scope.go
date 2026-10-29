@@ -58,32 +58,48 @@ func (c *Client) newSearchScope(ctx context.Context, skip, only []string) (*sear
 }
 
 // nameFolders fills in the folder name of rows that carry only a folder id.
-// Folders other than the standard ones are looked up once each.
-func (s *searchScope) nameFolders(ctx context.Context, c *Client, rows []mail.MessageSummary) error {
+// The standard folders are known already; other folders are looked up once
+// each.
+func (s *searchScope) nameFolders(ctx context.Context, c *Client, rows []mail.MessageSummary) {
 	for i := range rows {
 		id := rows[i].Folder.ID
 		if id == "" {
 			continue
 		}
-		name, ok := s.names[id]
-		if !ok {
-			var f graphFolder
-			target := fmt.Sprintf("%s/me/mailFolders/%s?$select=id,displayName", c.graphBaseURL, url.PathEscape(id))
-			err := c.graphGet(ctx, target, &f)
-			switch {
-			case errors.Is(err, errGraphNotFound):
-				// The folder is gone; the row keeps its id.
-				name = mail.FolderSummary{ID: id}
-			case err != nil:
-				return err
-			default:
-				name = mail.FolderSummary{ID: id, DisplayName: f.DisplayName}
-			}
-			s.names[id] = name
+		if name, ok := s.names[id]; ok {
+			rows[i].Folder = name
+			continue
 		}
-		rows[i].Folder = name
+		rows[i].Folder = c.folderName(ctx, id)
 	}
-	return nil
+}
+
+// folderName looks up the name of the folder with this id. Graph sends only
+// the folder id with a message. When the folder is gone or the lookup fails,
+// the summary keeps only the id; the command still shows the message.
+func (c *Client) folderName(ctx context.Context, id string) mail.FolderSummary {
+	if id == "" {
+		return mail.FolderSummary{}
+	}
+	c.folderMu.Lock()
+	defer c.folderMu.Unlock()
+	if f, ok := c.folderNames[id]; ok {
+		return f
+	}
+	out := mail.FolderSummary{ID: id}
+	var f graphFolder
+	target := fmt.Sprintf("%s/me/mailFolders/%s?$select=id,displayName", c.graphBaseURL, url.PathEscape(id))
+	if err := c.graphGet(ctx, target, &f); err == nil {
+		out.DisplayName = f.DisplayName
+	} else if !errors.Is(err, errGraphNotFound) {
+		// Try again next time; a 404 is final.
+		return out
+	}
+	if c.folderNames == nil {
+		c.folderNames = map[string]mail.FolderSummary{}
+	}
+	c.folderNames[id] = out
+	return out
 }
 
 // wellKnownLookups is how many standard folders maildo looks up at the same

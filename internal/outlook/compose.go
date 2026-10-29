@@ -98,6 +98,7 @@ func (c *Client) ReadDraft(ctx context.Context, req mail.ReadDraftRequest) (mail
 		return mail.Draft{}, err
 	}
 	draft := c.toDraft(g, body)
+	draft.Folder = c.folderName(ctx, draft.Folder.ID)
 	if draft.HasAttachments {
 		attachments, err := c.fetchAttachments(ctx, draft.ID, func() error { return c.messagesError() })
 		if err != nil {

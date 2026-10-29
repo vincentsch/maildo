@@ -1,0 +1,35 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('00000000-0000-0000-0000-000000000000')/messages(id,internetMessageId,conversationId,parentFolderId,subject,from,receivedDateTime,sentDateTime,isRead,importance,hasAttachments,bodyPreview)",
+  "value": [
+    {
+      "@odata.etag": "W/\"CQAAABYAAAAAAAAAAAAAAAAAAAAAAAAA\"",
+      "id": "AAMkAGsent1",
+      "receivedDateTime": "2026-10-15T06:45:41Z",
+      "sentDateTime": "2026-10-15T06:45:40Z",
+      "hasAttachments": false,
+      "internetMessageId": "<first@example.com>",
+      "subject": "Test thread",
+      "bodyPreview": "Hi Sam,\r\n\r\nA first message, sent over SMTP.\r\n\r\nDana",
+      "importance": "normal",
+      "parentFolderId": "AAMkAGsentitems",
+      "conversationId": "AAQkAGconv",
+      "isRead": true,
+      "from": {"emailAddress": {"name": "Dana Example", "address": "/O=EXCHANGELABS/OU=EXCHANGE ADMINISTRATIVE GROUP (FYDIBOHF23SPDLT)/CN=RECIPIENTS/CN=0123456789ABCDEF0123456789ABCDEF-00000000-00"}}
+    },
+    {
+      "@odata.etag": "W/\"CQAAABYAAAAAAAAAAAAAAAAAAAAAAAAB\"",
+      "id": "AAMkAGsent2",
+      "receivedDateTime": "2026-10-16T07:15:00Z",
+      "sentDateTime": "2026-10-16T07:14:59Z",
+      "hasAttachments": false,
+      "internetMessageId": "<second@example.com>",
+      "subject": "Re: Test thread",
+      "bodyPreview": "Hi Sam,\r\n\r\nA second message.\r\n\r\nDana",
+      "importance": "normal",
+      "parentFolderId": "AAMkAGsentitems",
+      "conversationId": "AAQkAGconv",
+      "isRead": true,
+      "from": {"emailAddress": {"name": "Dana Example", "address": "dana@example.com"}}
+    }
+  ]
+}

@@ -3,9 +3,11 @@ package outlook
 import (
 	"context"
 	"net/http"
+	"sync"
 	"sync/atomic"
 
 	"github.com/vincentsch/maildo/internal/errs"
+	"github.com/vincentsch/maildo/internal/mail"
 	"github.com/vincentsch/maildo/internal/provider"
 )
 
@@ -19,6 +21,10 @@ type Client struct {
 	email           string
 	searchResultCap int
 	destroyed       atomic.Bool
+
+	// folderNames caches folder names by id for one command.
+	folderMu    sync.Mutex
+	folderNames map[string]mail.FolderSummary
 }
 
 func (c *Client) VerifiedEmail() string { return c.email }

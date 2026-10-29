@@ -165,9 +165,7 @@ func (c *Client) SearchMessages(ctx context.Context, req mail.SearchRequest) (ma
 	if out.Messages == nil {
 		out.Messages = []mail.MessageSummary{}
 	}
-	if err := scope.nameFolders(ctx, c, out.Messages); err != nil {
-		return mail.MessageSummaryList{}, err
-	}
+	scope.nameFolders(ctx, c, out.Messages)
 	return out, nil
 }
 
