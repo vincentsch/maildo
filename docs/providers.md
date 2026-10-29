@@ -6,7 +6,7 @@ account.
 | Your account | Guide | How maildo connects | Status |
 | --- | --- | --- | --- |
 | Gmail (the easiest way), iCloud, Yahoo, Fastmail, GMX, Posteo, mailbox.org, a company or self-hosted server | [IMAP and SMTP](providers/imap.md) | IMAP for reading, SMTP for sending, with a password or app password | tested against Dovecot and GreenMail servers |
-| Outlook.com, Hotmail, Microsoft 365 | [Outlook](providers/outlook.md) | Microsoft Graph, with an app registration you create once | not yet tested against live accounts |
+| Outlook.com, Hotmail, Microsoft 365 | [Outlook](providers/outlook.md) | Microsoft Graph, with an app registration you create once | tested live with a Microsoft 365 work account; Outlook.com not yet |
 | Gmail through Google's API | [Gmail](providers/gmail.md) | Gmail API, with a Google Cloud OAuth app you create once | not yet tested against live accounts |
 
 `maildo login` starts with your address and picks the right way for you.

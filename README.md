@@ -177,7 +177,7 @@ has the details, including what these limits cannot stop.
 | --- | --- | --- |
 | Any IMAP service, such as Gmail or Posteo, or your own server | IMAP and SMTP with a password or app password | against Dovecot and GreenMail servers |
 | Fastmail | IMAP and SMTP with an app password | as an IMAP account |
-| Outlook.com and Microsoft 365 | Microsoft Graph with your own app registration | not yet tested against live accounts |
+| Outlook.com and Microsoft 365 | Microsoft Graph with your own app registration | live with a Microsoft 365 work account; Outlook.com not yet |
 | Gmail through the Gmail API | your own Google OAuth app | not yet tested against live accounts |
 
 ## Docs

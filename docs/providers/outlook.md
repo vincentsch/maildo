@@ -7,9 +7,25 @@ a small entry in Microsoft Entra that tells Microsoft which program asks for
 access to your mail. maildo does not come with a shared one. You create your
 own once, and it is free.
 
-> **Status:** tests cover the Outlook provider against a fake Graph server,
-> but it has not been tested against live accounts yet. Please report what
-> you find.
+> **Status:** tested live on 2026-10-29 with a Microsoft 365 work account.
+> These worked:
+>
+> - signing in, in the browser and with a device code
+> - reading and searching mail, threads included
+> - listing and downloading attachments
+> - drafts, and a reply saved as a draft
+> - sending a new message
+> - read marks and flags
+> - moving messages, and creating and deleting folders
+>
+> Not tested live yet:
+>
+> - personal Outlook.com and Hotmail accounts
+> - sending a saved draft, which is also how replies and forwards are sent
+> - changes to Inbox rules, and categories
+> - changes to many messages at once
+>
+> Please report what you find.
 
 ## 1. Get a directory
 
@@ -138,6 +154,16 @@ prints the `maildo draft send` command for that draft.
 Search uses Microsoft's own search, so it works like the search box in
 Outlook.
 
+A few things Outlook does its own way:
+
+- A reply to a message in your Sent folder goes to you, because you are its
+  sender. To write to the original recipients, change the draft with
+  `maildo draft update --id <draft id> --clear-to --to <address>`.
+- Outlook writes the subject of a reply itself, for example with `RE:`
+  where the preview shows `Re:`.
+- Outlook counts a few hundred extra bytes in an attachment's size. A
+  downloaded file has its real size.
+
 ## Staying signed in
 
 maildo refreshes the access token by itself. If Microsoft asks you to sign
@@ -160,3 +186,7 @@ run `maildo auth repair <name>`.
 - AADSTS700016, application not found: the client id is wrong, or the app
   was created in another directory and allows only that directory's
   accounts.
+- "Outlook asked maildo to slow down": Microsoft lets one app send only four
+  requests at a time to a mailbox. This happens when another program
+  uses the same app registration and mailbox at the same moment. Wait a few
+  seconds and run the command again.

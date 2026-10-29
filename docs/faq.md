@@ -76,10 +76,11 @@ report, the account's owner can turn on `policy.unattended_send`; see
 Gmail works over IMAP with an app password. maildo's IMAP code is tested
 against Dovecot and GreenMail servers, but not yet against a live Gmail
 account. Outlook.com and Microsoft 365 need Microsoft Graph and an app
-registration of your own, which is free. maildo can also use the Gmail API
-with your own Google OAuth app. Tests cover both API providers against fake
-servers, but they have not been tested against live accounts yet. Please
-report what you find.
+registration of your own, which is free. Outlook was tested live with a
+Microsoft 365 work account in October 2026, but not yet with a personal
+Outlook.com account. maildo can also use the Gmail API with your own Google
+OAuth app. Tests cover it against a fake server, but it has not been tested
+against a live account yet. Please report what you find.
 
 ### Why doesn't maildo come with its own OAuth app for Gmail and Outlook?
 
