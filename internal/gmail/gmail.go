@@ -1333,6 +1333,11 @@ func (c *Client) getJSON(ctx context.Context, path string, values url.Values, li
 	if status < 200 || status >= 300 {
 		return classifyHTTPStatus(c.account, path, status, body, false)
 	}
+	if status == http.StatusNoContent {
+		// Google answers 204 with no body when the fields mask leaves
+		// nothing, for example a search without matches.
+		body = []byte("{}")
+	}
 	return decodeJSONResponse(c.account, body, out)
 }
 

@@ -934,11 +934,12 @@ func gmailAttachmentRepresentationFor(part *gmailPart) gmailAttachmentRepresenta
 	return 0
 }
 
+// sameAttachmentSnapshotPart leaves out externalID on purpose: Gmail hands out
+// a new attachmentId each time it returns the message, so it never matches.
 func sameAttachmentSnapshotPart(a, b gmailAttachmentSnapshotPart) bool {
 	if a.representation != b.representation ||
 		a.decodedKnown != b.decodedKnown ||
 		a.decodedSize != b.decodedSize ||
-		a.externalID != b.externalID ||
 		a.inlineDigest != b.inlineDigest ||
 		a.disposition != b.disposition ||
 		!equalUint16Slices(a.childIndexPath, b.childIndexPath) {

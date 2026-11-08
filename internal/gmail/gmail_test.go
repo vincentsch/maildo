@@ -1883,6 +1883,62 @@ func TestMessageAttachmentsListAndDownload(t *testing.T) {
 	}
 }
 
+// A search without matches comes back as 204 No Content, as seen live on
+// 2026-11-08. That is an empty result, not an error.
+func TestSearchWithoutMatchesAcceptsNoContent(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/gmail/v1/users/me/messages" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+	search, err := testClient(server).SearchMessages(context.Background(), mail.SearchRequest{Query: mail.Query{Terms: []string{"nothing"}}, Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(search.Messages) != 0 {
+		t.Fatalf("search = %#v", search)
+	}
+}
+
+// Gmail returns a new attachmentId every time it sends the message, as seen
+// in the live test on 2026-11-08. The download must use the current one.
+func TestMessageAttachmentDownloadAcceptsANewGmailAttachmentID(t *testing.T) {
+	externalBytes := []byte("%PDF fresh")
+	structureCalls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/gmail/v1/users/me/messages/m1":
+			structureCalls++
+			writeJSON(w, gmailAttachmentMessageJSON("", fmt.Sprintf("att-fetch-%d", structureCalls), 0, int64(len(externalBytes))))
+		case "/gmail/v1/users/me/messages/m1/attachments/att-fetch-2":
+			writeJSON(w, map[string]any{"size": len(externalBytes), "data": base64.RawURLEncoding.EncodeToString(externalBytes)})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	client := testClient(server)
+	if _, err := client.ListMessageAttachments(context.Background(), mail.MessageAttachmentListRequest{MessageID: "m1"}); err != nil {
+		t.Fatal(err)
+	}
+	content, err := client.DownloadMessageAttachment(context.Background(), mail.MessageAttachmentDownloadRequest{MessageID: "m1", AttachmentID: "2"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer content.Content.Close()
+	got, err := io.ReadAll(content.Content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(externalBytes) {
+		t.Fatalf("content = %q", got)
+	}
+}
+
 func TestMessageAttachmentDownloadRequiresFreshSnapshot(t *testing.T) {
 	inlineBytes := []byte("first")
 	mutatedBytes := []byte("second")
@@ -2599,7 +2655,10 @@ func (f *gmailMutationFixture) handle(w http.ResponseWriter, r *http.Request) {
 			f.labels = append(f.labels, gmailLabel{ID: id, Name: body.Name, Type: "user"})
 			f.createRequests = append(f.createRequests, gmailLabelWriteRequest{Name: body.Name, Fields: r.URL.Query().Get("fields")})
 			f.mu.Unlock()
-			writeJSON(w, labelDetail(id, body.Name, "user", 0, 0, nil))
+			// Like Gmail, the create answer has no type field.
+			created := labelDetail(id, body.Name, "", 0, 0, nil)
+			delete(created, "type")
+			writeJSON(w, created)
 		default:
 			f.t.Fatalf("labels method = %s", r.Method)
 		}

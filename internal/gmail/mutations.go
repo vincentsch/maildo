@@ -181,7 +181,9 @@ func (c *Client) CreateFolder(ctx context.Context, req mail.FolderCreateRequest)
 	if created.ID == "" {
 		return mail.FolderMutationResult{}, errs.NewOutcomeUnknown(attempt, errs.OutcomeProviderResultMissing)
 	}
-	if created.Name != candidate || created.Type != "user" {
+	// Gmail's create answer has no type field (seen live on 2026-11-08); the
+	// direct read below checks that the label is a user label.
+	if created.Name != candidate || (created.Type != "" && created.Type != "user") {
 		return mail.FolderMutationResult{}, errs.NewOutcomeUnknown(attempt, errs.OutcomeProviderResultMalformed)
 	}
 	direct, err := c.directUserLabel(ctx, created.ID, candidate)
