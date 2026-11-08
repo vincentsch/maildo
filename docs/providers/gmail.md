@@ -98,7 +98,8 @@ Waiting for you to finish signing in (up to 5 minutes)...
 If no browser opens, open the address in a browser on the same computer.
 Google may warn that the app is unverified. It is your own app, so choose
 **Continue**. If you see an **Advanced** link instead, which happens once
-the app is In production, click it, then **Go to <your app name> (unsafe)**.
+the app is In production, click it, then the link that starts with **Go to**
+and ends with **(unsafe)**.
 
 ### The 7-day sign-in limit in Testing status
 
