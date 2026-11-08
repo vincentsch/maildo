@@ -264,6 +264,9 @@ func humanMutationPreview(f *rungrad.Factory, p mutationPreview, set mutationTar
 		}
 		if len(set.Targets) == 0 {
 			fmt.Fprintf(w, "No messages%s match, so there is nothing to change.\n", accountIn(p.AccountSelection))
+			if set.SkipsOwnMail {
+				fmt.Fprintln(w, "A change with --query leaves out Sent, Drafts, Trash and Junk. To change mail there, name the folder with --folder.")
+			}
 			return
 		}
 		problems := 0

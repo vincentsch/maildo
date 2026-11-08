@@ -37,6 +37,10 @@ type loginResult struct {
 	AuthRef         string  `json:"auth_ref"`
 	AuthStatus      string  `json:"auth_status"`
 	ActiveAccount   *string `json:"active_account"`
+	// unnamed is set when mail from this account would show only the
+	// address in From, because neither the provider nor sender_name gives
+	// a name. Gmail does not tell maildo the name.
+	unnamed bool
 }
 
 type listResult struct {
@@ -197,6 +201,9 @@ func humanLogin(r loginResult) func(io.Writer) {
 			fmt.Fprintf(w, "%q is the active account. Try: maildo list\n", r.Account)
 		} else {
 			fmt.Fprintf(w, "The active account is still %s. Use this one with --account %s\n", activeText(r.ActiveAccount), r.Account)
+		}
+		if r.unnamed {
+			fmt.Fprintf(w, "Mail you send shows only your address in From. To add your name, run: maildo config set sender_name \"Your Name\" --account %s\n", r.Account)
 		}
 	}
 }

@@ -97,7 +97,8 @@ Waiting for you to finish signing in (up to 5 minutes)...
 
 If no browser opens, open the address in a browser on the same computer.
 Google may warn that the app is unverified. It is your own app, so choose
-**Continue**.
+**Continue**. If you see an **Advanced** link instead, which happens once
+the app is In production, click it, then **Go to <your app name> (unsafe)**.
 
 ### The 7-day sign-in limit in Testing status
 
@@ -119,6 +120,14 @@ These are Google's rules at the time of writing. If the console looks
 different, check Google's pages on
 [the app audience](https://support.google.com/cloud/answer/15549945) and
 [OAuth](https://developers.google.com/identity/protocols/oauth2).
+
+### Removing access
+
+`maildo auth logout <name>` deletes the saved login on your computer, and
+`maildo auth remove <name>` removes the account from maildo. Google still
+lists your app as allowed after that. To take its access away, open
+[Linked apps](https://myaccount.google.com/connections) in your Google
+account, find your app and remove its access.
 
 ### Troubleshooting
 

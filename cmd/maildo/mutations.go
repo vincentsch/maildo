@@ -452,6 +452,8 @@ type mutationTargetSet struct {
 	Targets   []mutationTarget
 	Accounts  map[string]provider.ResolvedAccount
 	Bulk      bool
+	// SkipsOwnMail is set when a --query search left out Sent and Drafts.
+	SkipsOwnMail bool
 }
 
 // mutationPlan is what a command does to each message, such as the folder to
@@ -901,9 +903,10 @@ func (h *handlers) resolveMutationTargetSet(ctx context.Context, f *rungrad.Fact
 				MaxTargets:     parsed.MaxTargets,
 				MatchedAtLeast: len(rows),
 			},
-			Targets:  targets,
-			Accounts: map[string]provider.ResolvedAccount{accountKey(acct.Name, acct.Provider): acct},
-			Bulk:     true,
+			Targets:      targets,
+			Accounts:     map[string]provider.ResolvedAccount{accountKey(acct.Name, acct.Provider): acct},
+			Bulk:         true,
+			SkipsOwnMail: parsed.Scope.folder == "" && !parsed.Scope.restore,
 		}, nil
 	default:
 		return mutationTargetSet{}, errs.New(errs.CodeInvalidSelector, "unsupported mutation selector")

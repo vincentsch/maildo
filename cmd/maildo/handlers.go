@@ -277,6 +277,9 @@ func (h *handlers) login(f *rungrad.Factory, cmd *cobra.Command, _ []string) err
 		AuthStatus:      authStatusValid,
 		ActiveAccount:   activePtr(reg.ActiveAccount),
 	}
+	if account, ok := reg.Find(name); ok && strings.TrimSpace(account.SenderName) == "" && strings.TrimSpace(account.DisplayName) == "" {
+		result.unnamed = true
+	}
 	return f.WriteResultWithMeta(result, safeMeta(cmd.CommandPath(), "login", name, providerName, reg.ActiveAccount), humanLogin(result))
 }
 

@@ -65,7 +65,7 @@ func ToReadable(htmlContent string) string {
 			}
 			switch name {
 			case "li":
-				appendNewline(&b)
+				appendLineStart(&b)
 				b.WriteString("- ")
 			case "td", "th":
 				appendSpace(&b)
@@ -209,6 +209,17 @@ func appendNewline(b *strings.Builder) {
 		return
 	}
 	b.WriteByte('\n')
+}
+
+// appendLineStart starts a new line unless the text already is at the start
+// of one, so the items of a list stay on neighbouring lines.
+func appendLineStart(b *strings.Builder) {
+	s := strings.TrimRight(b.String(), " ")
+	b.Reset()
+	b.WriteString(s)
+	if b.Len() > 0 && !strings.HasSuffix(s, "\n") {
+		b.WriteByte('\n')
+	}
 }
 
 func cleanup(in string) string {

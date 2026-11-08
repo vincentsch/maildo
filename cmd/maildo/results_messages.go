@@ -150,6 +150,9 @@ func humanMessageList(f *rungrad.Factory, page MessagePage, offset int, view mes
 		switch {
 		case page.Total != nil && offset == 0 && len(rows) == *page.Total:
 			fmt.Fprintf(w, "%s\n\n", plainField(pluralizeView(*page.Total, view.showing)))
+		case page.Total == nil && offset == 0 && !page.HasMore:
+			// Gmail gives no total, but the whole list fits on this page.
+			fmt.Fprintf(w, "%s\n\n", plainField(pluralizeView(len(rows), view.showing)))
 		case page.Total != nil:
 			fmt.Fprintf(w, "Showing %d-%d of %s\n\n", first, last, plainField(pluralizeView(*page.Total, view.showing)))
 		default:

@@ -38,3 +38,13 @@ func TestToReadableMalformedAndEmpty(t *testing.T) {
 		t.Fatalf("malformed = %q, want Open tag", got)
 	}
 }
+
+// Markdown sends turn their HTML into the text part this way. A tight list
+// must not get blank lines between its items.
+func TestToReadableKeepsListItemsTogether(t *testing.T) {
+	got := ToReadable("<p>Hallo,</p>\n<ul>\n<li>eins</li>\n<li>zwei</li>\n</ul>\n<p>Gruß</p>\n")
+	want := "Hallo,\n\n- eins\n- zwei\n\nGruß"
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
