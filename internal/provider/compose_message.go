@@ -12,7 +12,8 @@ import (
 // messages. Gmail and IMAP both store drafts as MIME, so they share them.
 
 // ReplyMessage builds a reply: to the Reply-To addresses or the sender,
-// for a reply to all also to the other recipients, never to yourself.
+// for a reply to all also to the other recipients, never to yourself. A
+// reply to a message you wrote goes to its recipients, as in Gmail.
 func ReplyMessage(from mail.Recipient, req ReplyDraftRequest, source ComposeSourceMaterial) mimecompose.Message {
 	text, htmlBody := MIMEBodies(req.Body)
 	return mimecompose.Message{
@@ -81,6 +82,14 @@ func replyRecipients(source ComposeSourceMaterial, self string) []mail.Recipient
 			out = append(out, r)
 		}
 		return out
+	}
+	if self != "" && strings.EqualFold(strings.TrimSpace(source.From.Address), self) {
+		// Your own message: reply to the people you wrote to. A note to
+		// yourself gets a reply to yourself.
+		if to := filter(source.To); len(to) > 0 {
+			return to
+		}
+		return []mail.Recipient{source.From}
 	}
 	if len(source.ReplyTo) > 0 {
 		return filter(source.ReplyTo)
