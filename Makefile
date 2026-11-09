@@ -47,7 +47,7 @@ docs-check:
 	go test ./cmd/maildo -run TestGeneratedDocsAndHelpGoldens -count=1
 
 conformance:
-	go test -tags conformance ./cmd/maildo -run '^TestConformance|^TestOfflineFourProviderJourneys$$' -count=1
+	go test -tags conformance ./cmd/maildo -run '^TestConformance|^TestOfflineFourProviderJourneys$$|^TestConformancePathUnderLinkedHome$$' -count=1
 
 # Real-server tests against Dovecot and GreenMail in Docker.
 mailservers-up:

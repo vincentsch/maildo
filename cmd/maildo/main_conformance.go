@@ -243,6 +243,14 @@ func conformanceConfigPath(args []string, home string) (string, error) {
 func conformanceContainedPath(home, path string) (string, string, error) {
 	home = filepath.Clean(home)
 	path = filepath.Clean(path)
+	// home is resolved, but paths built from $HOME may not be: on macOS the
+	// temp folder /var/folders is a link to /private/var/folders. Move such a
+	// path onto the resolved home before checking that it stays inside.
+	if raw := filepath.Clean(os.Getenv("HOME")); raw != home {
+		if rel, err := filepath.Rel(raw, path); err == nil && !relEscapes(rel) {
+			path = filepath.Join(home, rel)
+		}
+	}
 	rel, err := filepath.Rel(home, path)
 	if err != nil || relEscapes(rel) {
 		return "", "", errors.New("path outside conformance home")
