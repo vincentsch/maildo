@@ -7,7 +7,7 @@ You can use a Gmail account with maildo in two ways.
 | Setup | create an app password | create an OAuth app in Google Cloud |
 | Needs | 2-Step Verification on your Google account | a Google Cloud project |
 | Gmail labels as folders | yes, through IMAP | yes |
-| Status | tested against real IMAP servers | not yet tested against live accounts |
+| Status | tested against real IMAP servers | tested live with a Google Workspace account |
 
 For most people the app password is the better start.
 
@@ -35,6 +35,24 @@ Gmail's "All Mail" folder holds every message. When that folder exists,
 maildo searches only there, so a message with three labels shows up once.
 
 ## Gmail API with your own OAuth app
+
+> **Status:** tested live on 2026-11-08 with a Google Workspace account and
+> its own Desktop app client. These worked:
+>
+> - signing in, with Google's warning screen for an app it hasn't verified
+> - listing, searching and reading mail, threads included
+> - sending a new message with an attachment, after its preview
+> - a reply saved as a draft and then sent, and forwards with attachments
+> - downloading attachments, and adding and removing draft attachments
+> - read marks, and moving, archiving, restoring and deleting messages
+> - creating, renaming and deleting labels
+>
+> Not tested live yet:
+>
+> - a personal @gmail.com account
+> - Gmail over IMAP with an app password
+>
+> Please report what you find.
 
 This way uses Google's Gmail API instead of IMAP. Google requires every
 program that reads Gmail through the API to have its own OAuth client, and

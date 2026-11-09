@@ -93,8 +93,8 @@ account. Outlook.com and Microsoft 365 need Microsoft Graph and an app
 registration of your own, which is free. Outlook was tested live with a
 Microsoft 365 work account in October 2026, but not yet with a personal
 Outlook.com account. maildo can also use the Gmail API with your own Google
-OAuth app. Tests cover it against a fake server, but it has not been tested
-against a live account yet. Please report what you find.
+OAuth app. It was tested live with a Google Workspace account in November
+2026, but not yet with a personal Gmail account. Please report what you find.
 
 ### Why doesn't maildo come with its own OAuth app for Gmail and Outlook?
 
