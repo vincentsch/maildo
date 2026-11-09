@@ -36,12 +36,12 @@ func (c *accountClient) Diagnose(ctx context.Context) mail.Diagnosis {
 	// DNS. A test dialer stands in for the network, so there is nothing to
 	// look up.
 	if c.opts.DialContext == nil {
-		addrs, err := net.DefaultResolver.LookupHost(ctx, imapEP.Host)
+		detail, err := dnsCheck(ctx, imapEP.Host)
 		if err != nil {
-			add("DNS", "failed", fmt.Sprintf("%s does not resolve: %v", imapEP.Host, err))
+			add("DNS", "failed", detail)
 			return d
 		}
-		add("DNS", "ok", fmt.Sprintf("%s is %s", imapEP.Host, addrs[0]))
+		add("DNS", "ok", detail)
 	}
 
 	// TLS and the certificate, on a connection of its own.
@@ -156,6 +156,18 @@ func (c *accountClient) Diagnose(ctx context.Context) mail.Diagnosis {
 		d.Limits = append(d.Limits, "the server lacks CONDSTORE, so maildo cannot notice when another mail program changes a message while maildo marks or flags it")
 	}
 	return d
+}
+
+// dnsCheck looks up the server's name. An IP address needs no lookup.
+func dnsCheck(ctx context.Context, host string) (string, error) {
+	if net.ParseIP(host) != nil {
+		return host + " is an IP address, so no DNS lookup is needed", nil
+	}
+	addrs, err := net.DefaultResolver.LookupHost(ctx, host)
+	if err != nil {
+		return fmt.Sprintf("%s does not resolve: %v", host, err), err
+	}
+	return fmt.Sprintf("%s is %s", host, addrs[0]), nil
 }
 
 // tlsCheck connects, starts TLS (right away or after STARTTLS) and

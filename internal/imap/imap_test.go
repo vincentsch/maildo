@@ -1595,6 +1595,17 @@ func assertProductReason(t *testing.T, err error, reason string) {
 // then becomes a warning.
 func refuseSentCopy(conn net.Conn) { _ = conn.Close() }
 
+// doctor does not look up an IP address in DNS. A line like "127.0.0.1 is
+// 127.0.0.1" would tell the user nothing.
+func TestDNSCheckSaysAnIPAddressNeedsNoLookup(t *testing.T) {
+	for _, host := range []string{"127.0.0.1", "::1"} {
+		detail, err := dnsCheck(context.Background(), host)
+		if err != nil || detail != host+" is an IP address, so no DNS lookup is needed" {
+			t.Fatalf("dnsCheck(%q) = %q, %v", host, detail, err)
+		}
+	}
+}
+
 // When a server sends nothing for the named thread headers, maildo takes
 // them from the whole header, folded lines included, and nothing else.
 func TestHeaderFieldsKeepsOnlyTheThreadHeaders(t *testing.T) {
