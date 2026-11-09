@@ -35,7 +35,7 @@ func ParseQueryAt(raw string, now time.Time) (mail.Query, error) {
 		return mail.Query{}, invalidQuery("query is empty")
 	}
 	var q mail.Query
-	for _, tok := range tokens {
+	for i, tok := range tokens {
 		if tok.quoted {
 			if tok.value == "" {
 				return mail.Query{}, invalidQuery("quoted phrase must not be empty")
@@ -44,8 +44,14 @@ func ParseQueryAt(raw string, now time.Time) (mail.Query, error) {
 			continue
 		}
 		if strings.EqualFold(tok.value, "OR") {
+			// from:a OR from:b is the same as from:a from:b, because a
+			// repeated operator matches any of its values. Any other OR
+			// would need real OR logic, which maildo does not have.
+			if i > 0 && i+1 < len(tokens) && sameRepeatableOperator(tokens[i-1], tokens[i+1]) {
+				continue
+			}
 			return mail.Query{}, errs.New(errs.CodeUnsupportedQueryOperator,
-				"OR between search words is not supported; repeat an operator to match any of its values, like from:a@example.com from:b@example.com, or quote \"OR\" to search for the word")
+				"OR works only between two values of the same operator, like from:a@example.com OR from:b@example.com, which matches mail from either sender. For other searches, run one search for each part, or quote \"OR\" to search for the word")
 		}
 		// Searching for these as words would quietly change what the
 		// search means, so they are refused with a way out.
@@ -116,6 +122,24 @@ func ParseQueryAt(raw string, now time.Time) (mail.Query, error) {
 		return mail.Query{}, invalidQuery("query is empty")
 	}
 	return q, nil
+}
+
+// sameRepeatableOperator reports whether a and b use the same operator,
+// and it is one that matches any of its values when you repeat it.
+func sameRepeatableOperator(a, b queryToken) bool {
+	if a.quoted || b.quoted {
+		return false
+	}
+	nameA, valueA, okA := operatorParts(a.value)
+	nameB, valueB, okB := operatorParts(b.value)
+	if !okA || !okB || valueA == "" || valueB == "" || !strings.EqualFold(nameA, nameB) {
+		return false
+	}
+	switch strings.ToLower(nameA) {
+	case "from", "to", "cc", "subject":
+		return true
+	}
+	return false
 }
 
 // applyIs handles is:unread, is:read, is:flagged (or is:starred) and
