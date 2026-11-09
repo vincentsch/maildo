@@ -246,7 +246,13 @@ func previewCommand(cmd *cobra.Command, acct provider.ResolvedAccount, code stri
 		set = append(set, [2]string{"approve", code}, [2]string{"yes", ""})
 	}
 	command := commandLine(cmd, nil, drop, set)
-	if len(command) > 400 && len(pin) == 0 {
+	// The limit is for long message text, so a long --config path does
+	// not count.
+	length := len(command)
+	if flag := cmd.Flags().Lookup("config"); flag != nil && flag.Changed {
+		length -= len(shellQuote(flag.Value.String()))
+	}
+	if length > 400 && len(pin) == 0 {
 		return ""
 	}
 	return command

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -215,7 +216,12 @@ func TestRuleDeleteRealTerminalDoesNotPrompt(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+	// util-linux script takes the command as a string, BSD script on macOS
+	// takes it as arguments after the output file.
 	cmd := exec.CommandContext(ctx, script, "-qfec", strings.Join(quoted, " "), "/dev/null")
+	if runtime.GOOS == "darwin" {
+		cmd = exec.CommandContext(ctx, script, "-q", "-e", "/dev/null", "/bin/sh", "-c", strings.Join(quoted, " "))
+	}
 	cmd.Env = append(os.Environ(), ruleInterruptionHelperEnv+"=pty_no_prompt")
 	output, err := cmd.CombinedOutput()
 	if ctx.Err() != nil {

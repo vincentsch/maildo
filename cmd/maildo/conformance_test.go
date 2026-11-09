@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -444,7 +445,13 @@ func TestConformanceFixtureConsumesEnvironmentCredential(t *testing.T) {
 	taggedBin := buildMaildoBinary(t, []string{"conformance"})
 	home := newConformanceHome(t)
 	seedConformanceProcess(t, taggedBin, home)
-	cache := filepath.Join(home, "maildo", "auth", "conformance", "fixture.json")
+	// rungrad keeps its files in the user config folder, which macOS puts
+	// under Library even when XDG_CONFIG_HOME is set.
+	configDir := home
+	if runtime.GOOS == "darwin" {
+		configDir = filepath.Join(home, "Library", "Application Support")
+	}
+	cache := filepath.Join(configDir, "maildo", "auth", "conformance", "fixture.json")
 	corrupt := []byte("not-json\n")
 	if err := os.WriteFile(cache, corrupt, 0o600); err != nil {
 		t.Fatal(err)
