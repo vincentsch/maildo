@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"strings"
+	"unicode"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -14,10 +17,21 @@ import (
 // --template never carry over, because a filter written for this output
 // does not fit the output of the next step. The command gets --json in
 // their place.
+//
+// The result is safe to paste into a POSIX shell: the shell hands maildo
+// every argument exactly as the user gave it.
 func commandLine(cmd *cobra.Command, args []string, drop []string, set [][2]string) string {
 	parts := strings.Fields(cmd.CommandPath())
+	// An argument that starts with a dash, such as a folder named "-old",
+	// would be read as a flag. Such arguments go last, after "--".
+	argsLast := false
 	for _, arg := range args {
-		parts = append(parts, shellQuote(arg))
+		argsLast = argsLast || strings.HasPrefix(arg, "-")
+	}
+	if !argsLast {
+		for _, arg := range args {
+			parts = append(parts, shellQuote(arg))
+		}
 	}
 	skip := map[string]bool{"jq": true, "template": true}
 	for _, name := range drop {
@@ -76,10 +90,19 @@ func commandLine(cmd *cobra.Command, args []string, drop []string, set [][2]stri
 			parts = append(parts, "--"+pair[0], shellQuote(pair[1]))
 		}
 	}
+	if argsLast {
+		parts = append(parts, "--")
+		for _, arg := range args {
+			parts = append(parts, shellQuote(arg))
+		}
+	}
 	return strings.Join(parts, " ")
 }
 
-// shellQuote quotes s for a POSIX shell when it needs quoting.
+// shellQuote quotes s for a POSIX shell when it needs quoting. Inside
+// single quotes a shell changes nothing, line breaks included, so only a
+// single quote itself needs care: it ends the quoted part, adds the quote
+// in double quotes and starts a new quoted part.
 func shellQuote(s string) string {
 	if s == "" {
 		return "''"
@@ -95,4 +118,37 @@ func shellQuote(s string) string {
 		return s
 	}
 	return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'"
+}
+
+// writeCommand prints a command for a person to copy, indented on its own
+// line. A line break inside quotes stays a line break, so the shell gets
+// the same text. Tabs and other control characters do not survive a copy
+// from the terminal, and some could change what the terminal shows. A
+// command with them is not printed; the line says what to do instead.
+func writeCommand(w io.Writer, command, otherwise string) {
+	if !terminalSafe(command) {
+		fmt.Fprintf(w, "  (The command has characters a terminal cannot show. %s)\n", otherwise)
+		return
+	}
+	fmt.Fprintln(w, "  "+command)
+}
+
+// Ways to get a command that writeCommand did not print.
+const (
+	commandInJSON     = "Add --json to get it."
+	commandWithoutDry = "Run the same command again without --dry-run."
+)
+
+// terminalSafe reports whether command can be printed in a terminal and
+// copied back unchanged.
+func terminalSafe(command string) bool {
+	for _, r := range command {
+		if r == '\n' {
+			continue
+		}
+		if unicode.IsControl(r) || unicode.In(r, unicode.Cf, unicode.Zl, unicode.Zp) {
+			return false
+		}
+	}
+	return true
 }

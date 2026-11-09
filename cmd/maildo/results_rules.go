@@ -274,7 +274,7 @@ func humanRulePreview(acct provider.ResolvedAccount, rule mail.Rule, change mail
 			fmt.Fprintf(w, "Would delete %s.\n\n", name)
 		}
 		fmt.Fprintf(w, "Nothing was changed. To %s, run:\n", verb)
-		fmt.Fprintln(w, "  "+plainField(command))
+		writeCommand(w, command, commandWithoutDry)
 	}
 }
 

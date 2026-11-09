@@ -163,9 +163,14 @@ func humanMessageList(f *rungrad.Factory, page MessagePage, offset int, view mes
 			fmt.Fprintln(w)
 			fmt.Fprintln(w, "* unread  ! flagged  + attachment")
 		}
-		if view.nextPage != "" {
+		switch {
+		case view.nextPage == "":
+		case terminalSafe(view.nextPage):
 			fmt.Fprintln(w)
 			fmt.Fprintln(w, "Next page: "+view.nextPage)
+		default:
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "There are more messages. Add --page to the same command to see them.")
 		}
 	}
 }

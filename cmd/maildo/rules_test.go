@@ -1063,7 +1063,7 @@ func TestRuleMutationPreviewPreservesMachineValuesAndRejectsHumanControls(t *tes
 		}
 	}
 	if !strings.Contains(text, fmt.Sprintf("Would change the rule %q in %s:", plainField(rule.DisplayName), plainField(acct.Name))) ||
-		!strings.Contains(text, "  maildo rules update "+plainField(rule.ID)+"\n") {
+		!strings.Contains(text, "  (The command has characters a terminal cannot show. "+commandWithoutDry+")\n") {
 		t.Fatalf("preview did not retain sanitized values: %q", text)
 	}
 

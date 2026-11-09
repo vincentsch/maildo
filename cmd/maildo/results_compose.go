@@ -176,7 +176,7 @@ func humanDraftPreview(acct provider.ResolvedAccount, msg outgoing, command stri
 		fmt.Fprintln(w)
 		writeSenderNote(w, acct, msg)
 		fmt.Fprintln(w, "Nothing was saved. To save it, run:")
-		fmt.Fprintln(w, "  "+plainField(command))
+		writeCommand(w, command, commandWithoutDry)
 	}
 }
 
@@ -208,7 +208,7 @@ func humanDraftUpdatePreview(acct provider.ResolvedAccount, draftID string, p ma
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "The rest of the draft would stay the same.")
 		fmt.Fprintln(w, "Nothing was changed. To update the draft, run:")
-		fmt.Fprintln(w, "  "+plainField(command))
+		writeCommand(w, command, commandWithoutDry)
 	}
 }
 

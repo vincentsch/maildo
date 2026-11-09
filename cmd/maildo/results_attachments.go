@@ -278,7 +278,7 @@ func humanDownloadPreview(r messageAttachmentDownloadResult, command string) fun
 		downloadTable(w, r.Attachments, true)
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "Nothing was saved. To save them, run:")
-		fmt.Fprintln(w, "  "+plainField(command))
+		writeCommand(w, command, commandWithoutDry)
 	}
 }
 
@@ -297,7 +297,7 @@ func humanAttachmentChangePreview(acct provider.ResolvedAccount, subject string,
 			fmt.Fprintf(w, "Would remove %s from %s in %s.\n\n", files, draft, plainField(acct.Name))
 		}
 		fmt.Fprintln(w, "Nothing was changed. To do it, run:")
-		fmt.Fprintln(w, "  "+plainField(command))
+		writeCommand(w, command, commandWithoutDry)
 	}
 }
 

@@ -261,6 +261,19 @@ maildo draft send <draft_id> --dry-run --json       # show this to the user
    command has no `send_command`; then run the previewed command again
    with `--account <account> --approve <approval_code> --yes` in place of
    `--dry-run`, with `account` and `approval_code` from the preview.
+
+   The command is safe to paste into a shell as it is. Every argument is
+   quoted, and a line break in the body stays a line break inside the
+   quotes. In the JSON, `send_command` is a JSON string, so a line break
+   shows as `\n` and a `"` as `\"`. Use the decoded value, never the
+   escaped text. `--jq .send_command` prints the command the way the shell
+   needs it.
+
+   For a body with more than one line, write it to a file and use
+   `--body-file`. The `send_command` then names the file and fits on one
+   line. Do not change the file before you send. If you cannot run a
+   command as printed, do not edit it. Make a new preview with
+   `--body-file`, show it to the user and use its command.
 5. If maildo answers `approval_mismatch`, the message changed after the
    preview. Run the preview again, show the new version and ask again.
 6. If maildo answers `approval_used`, this message already went out (or

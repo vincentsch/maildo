@@ -122,6 +122,11 @@ Never type a code yourself. When a very long command has no
 `--approve` is refused. If maildo answers `approval_mismatch`, the message
 changed after the preview: preview it again and ask again.
 
+The command is safe to paste into a shell. In the JSON it is a JSON
+string, so a line break in the body shows as `\n`; use the decoded value.
+For a body with more than one line, use `--body-file`, and the command
+fits on one line.
+
 A code sends its message once. If maildo answers `approval_used`, the
 message already went out (or may have) at `sent_at`. Do not send it again;
 tell the user and ask them to look in Sent. A preview with `sent_before`

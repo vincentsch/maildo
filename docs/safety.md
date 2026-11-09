@@ -138,6 +138,14 @@ To send it, run:
   maildo send --to 'Clara Client <clara@client.example>' --subject 'Quote for October' --body-file quote.txt --account work --approve k7q2m9xd --yes
 ```
 
+You can paste the printed command into a shell as it is. maildo quotes
+every argument, so the shell passes on quotes, `$` signs and letters
+outside ASCII unchanged. A body given with `--body` that has line breaks
+makes the command span several lines, with the line breaks inside the
+quotes. With `--body-file`, the command names the file and stays on one
+line. When a command has characters a terminal cannot show, such as a
+tab, the text output says so instead of printing it, and `--json` has it.
+
 The code is a short hash of everything in the preview, the reply headers
 included, and of the account that sends. When you run the printed command, maildo works out the code
 again. If anything changed in between, for example someone edited the

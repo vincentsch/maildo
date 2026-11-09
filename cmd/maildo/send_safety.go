@@ -315,7 +315,7 @@ func writeComposePreview(f *rungrad.Factory, cmd *cobra.Command, acct provider.R
 			fmt.Fprintln(w, "Nothing was saved. To save it, run the same command without --dry-run.")
 		case !p.Send:
 			fmt.Fprintln(w, "Nothing was saved. To save it, run:")
-			fmt.Fprintln(w, "  "+p.SendCommand)
+			writeCommand(w, p.SendCommand, commandInJSON)
 		case p.SendCommand == "":
 			fmt.Fprintf(w, "Nothing was sent. The approval code for this message is %s.\n", p.ApprovalCode)
 			fmt.Fprintf(w, "To send it, run the same command with --approve %s --yes instead of --dry-run.\n", p.ApprovalCode)
@@ -325,7 +325,7 @@ func writeComposePreview(f *rungrad.Factory, cmd *cobra.Command, acct provider.R
 			}
 			fmt.Fprintf(w, "The approval code for this message is %s.\n", p.ApprovalCode)
 			fmt.Fprintln(w, "To send it, run:")
-			fmt.Fprintln(w, "  "+p.SendCommand)
+			writeCommand(w, p.SendCommand, commandInJSON)
 		}
 		if bodyFile, _ := cmd.Flags().GetString("body-file"); bodyFile == "-" && !p.DraftSaved {
 			fmt.Fprintln(w, "The command reads the body from stdin, so pipe in the same text again.")

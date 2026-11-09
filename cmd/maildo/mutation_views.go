@@ -306,7 +306,7 @@ func humanMutationPreview(f *rungrad.Factory, p mutationPreview, set mutationTar
 				todo = "change its categories"
 			}
 			fmt.Fprintf(w, "Nothing was changed. To %s, run:\n", todo)
-			fmt.Fprintln(w, "  "+p.ApplyCommand)
+			writeCommand(w, p.ApplyCommand, commandInJSON)
 			return
 		}
 		object := pluralize(len(set.Targets), "message", "messages") + accountIn(p.AccountSelection)
@@ -344,7 +344,7 @@ func humanMutationPreview(f *rungrad.Factory, p mutationPreview, set mutationTar
 			return
 		}
 		fmt.Fprintf(w, "Nothing was changed. To %s, run:\n", opPhrase(plan.Operation, "these messages", folder, plan.Categories, false))
-		fmt.Fprintln(w, "  "+p.ApplyCommand)
+		writeCommand(w, p.ApplyCommand, commandInJSON)
 	}
 }
 
@@ -413,7 +413,7 @@ func writeUndo(w io.Writer, object, from string, commands []string) {
 		fmt.Fprintf(w, "To move %s back, run:\n", object)
 	}
 	for _, c := range commands {
-		fmt.Fprintln(w, "  "+c)
+		writeCommand(w, c, commandInJSON)
 	}
 }
 

@@ -132,7 +132,11 @@ func humanFolderPreview(plan folderMutationPreviewPlan) func(io.Writer) {
 			return
 		}
 		fmt.Fprintf(w, "Nothing was changed. To %s, run:\n", verb)
-		fmt.Fprintln(w, "  "+plan.Command)
+		otherwise := commandWithoutDry
+		if plan.Operation == mail.FolderOperationDelete {
+			otherwise = "Run the same command again without --dry-run, with --confirm and the folder id."
+		}
+		writeCommand(w, plan.Command, otherwise)
 	}
 }
 

@@ -100,6 +100,11 @@ Windows is not supported yet, but you can use maildo inside WSL.
   says it went out before and lets the code send it once more.
 - Printed send commands name the account, so switching accounts in between
   does not change who sends.
+- Every command maildo prints for the next step can be pasted into a shell
+  as it is, whatever its arguments hold. A line break in a body stays a
+  line break inside the quotes, and an argument that starts with a dash
+  goes after `--`. A command with a tab or another character a terminal
+  cannot show is not printed in the terminal; the JSON has it.
 - Gmail sends a draft with the raw message maildo checked. Outlook sends
   every message with sendMail, a draft as the copy maildo checked, and
   `send --attach` works on Outlook up to 3 MB of attachments. On Outlook,
