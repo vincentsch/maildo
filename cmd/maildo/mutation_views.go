@@ -191,7 +191,8 @@ type previewTarget struct {
 	Subject           *string              `json:"subject,omitempty"`
 	From              *mail.Recipient      `json:"from,omitempty"`
 	Folder            *mail.FolderSummary  `json:"folder,omitempty"`
-	Date              *time.Time           `json:"date,omitempty"`
+	ReceivedAt        *time.Time           `json:"received_at,omitempty"`
+	SentAt            *time.Time           `json:"sent_at,omitempty"`
 	TargetFolder      *mail.FolderSummary  `json:"target_folder,omitempty"`
 	Categories        *mail.CategoryChange `json:"categories,omitempty"`
 	WouldChange       *bool                `json:"would_change,omitempty"`
@@ -229,9 +230,7 @@ func buildMutationPreview(set mutationTargetSet, plan mutationPlan, folders map[
 			from := s.From
 			folder := s.Folder
 			row.Subject, row.From, row.Folder = &subject, &from, &folder
-			if when := s.Time(); !when.IsZero() {
-				row.Date = &when
-			}
+			row.ReceivedAt, row.SentAt = s.ReceivedAt, s.SentAt
 		}
 		if folder, ok := folders[accountKey(t.Account.Name, t.Account.Provider)]; ok && len(folders) > 1 {
 			summary := mail.SummaryFrom(folder)
