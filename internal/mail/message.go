@@ -189,14 +189,17 @@ type MessageSummary struct {
 	Subject           string                   `json:"subject"`
 	ReceivedAt        *time.Time               `json:"received_at,omitempty"`
 	SentAt            *time.Time               `json:"sent_at,omitempty"`
-	IsRead            bool                     `json:"is_read"`
+	IsRead            bool                     `json:"read"`
 	Flagged           bool                     `json:"flagged"`
 	Importance        string                   `json:"importance,omitempty"`
 	HasAttachments    bool                     `json:"has_attachments"`
 	Preview           string                   `json:"preview,omitempty"`
 	ProviderMeta      *SummaryProviderMetadata `json:"provider_metadata,omitempty"`
-	SortGroup         string                   `json:"-"`
-	SortOrdinal       uint64                   `json:"-"`
+	// To and CC are for thread rows. List rows count them instead.
+	To          []Recipient `json:"-"`
+	CC          []Recipient `json:"-"`
+	SortGroup   string      `json:"-"`
+	SortOrdinal uint64      `json:"-"`
 }
 
 // Time returns when the message arrived, or else when it was sent, or else

@@ -262,15 +262,15 @@ type Draft struct {
 	Account           string                 `json:"account"`
 	Provider          string                 `json:"provider"`
 	ID                string                 `json:"id"`
-	IsDraft           bool                   `json:"is_draft"`
+	IsDraft           bool                   `json:"draft"`
 	InternetMessageID string                 `json:"internet_message_id,omitempty"`
 	ThreadID          string                 `json:"thread_id,omitempty"`
 	Folder            FolderSummary          `json:"folder"`
 	From              Recipient              `json:"from"`
-	ReplyTo           []Recipient            `json:"reply_to,omitempty"`
-	To                []Recipient            `json:"to,omitempty"`
-	CC                []Recipient            `json:"cc,omitempty"`
-	BCC               []Recipient            `json:"bcc,omitempty"`
+	ReplyTo           []Recipient            `json:"reply_to"`
+	To                []Recipient            `json:"to"`
+	CC                []Recipient            `json:"cc"`
+	BCC               []Recipient            `json:"bcc"`
 	Subject           string                 `json:"subject"`
 	CreatedAt         *time.Time             `json:"created_at,omitempty"`
 	LastModifiedAt    *time.Time             `json:"last_modified_at,omitempty"`
@@ -281,6 +281,16 @@ type Draft struct {
 	// Send is what sending the draft would hand over. Only ValidateDraftSend
 	// fills it.
 	Send *SendContent `json:"-"`
+}
+
+// MarshalJSON writes empty address lists as [] instead of null.
+func (d Draft) MarshalJSON() ([]byte, error) {
+	type plain Draft
+	p := plain(d)
+	for _, list := range []*[]Recipient{&p.ReplyTo, &p.To, &p.CC, &p.BCC} {
+		*list = NonNilRecipients(*list)
+	}
+	return MarshalPlainJSON(p)
 }
 
 // ForwardAttachmentMode says which attachments of the original message go

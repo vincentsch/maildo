@@ -1642,9 +1642,10 @@ func appliedTargetFromResult(target mutationTarget, op mail.MessageMutationOpera
 	row.InternetMessageID = internetID
 	row.Status = "succeeded"
 	row.ResultMessageID = result.ResultMessageID
-	if row.ResultMessageID == "" && movesMessage(op) {
-		// The id stayed the same, as on Gmail. new_id is still set, so a
-		// script finds the current id in one place.
+	if row.ResultMessageID == "" {
+		// The id stayed the same, as for a flag, or for a move on Gmail.
+		// new_id is still set, so a script finds the current id in one
+		// place.
 		row.ResultMessageID = messageID
 	}
 	row.SourceFolder = result.SourceFolder
@@ -1660,16 +1661,6 @@ func appliedTargetFromResult(target mutationTarget, op mail.MessageMutationOpera
 	row.WriteOutcomeFacts = mail.CloneWriteOutcomeFacts(result.WriteOutcomeFacts)
 	row.ProviderMeta = cloneProviderMetadataForResult(result.ProviderMeta)
 	return row
-}
-
-// movesMessage reports whether op puts a message in another folder, or a
-// copy of it there.
-func movesMessage(op mail.MessageMutationOperation) bool {
-	switch op {
-	case mail.MutationMove, mail.MutationCopy, mail.MutationArchive, mail.MutationDelete, mail.MutationRestore, mail.MutationJunk:
-		return true
-	}
-	return false
 }
 
 func plannedTargetBase(target mutationTarget, op mail.MessageMutationOperation) mail.AppliedMutationTarget {
@@ -1699,6 +1690,8 @@ func failedTarget(target mutationTarget, op mail.MessageMutationOperation, err e
 func skippedTarget(target mutationTarget, op mail.MessageMutationOperation, reason, code string, details map[string]any) mail.AppliedMutationTarget {
 	row := plannedTargetBase(target, op)
 	row.Status = "skipped"
+	// Nothing changed, so the message keeps its id.
+	row.ResultMessageID = row.ID
 	row.Reason = reason
 	row.ErrorCode = code
 	row.ErrorDetails = details

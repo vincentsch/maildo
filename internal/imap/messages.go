@@ -972,8 +972,9 @@ func (c *accountClient) toSummary(msg imapFetchedMessage) mail.MessageSummary {
 	if from := envelopeRecipients(msg.envelope, func(e *goimap.Envelope) []goimap.Address { return e.From }); len(from) > 0 {
 		summary.From = from[0]
 	}
-	summary.ToCount = len(envelopeRecipients(msg.envelope, func(e *goimap.Envelope) []goimap.Address { return e.To }))
-	summary.CCCount = len(envelopeRecipients(msg.envelope, func(e *goimap.Envelope) []goimap.Address { return e.Cc }))
+	summary.To = envelopeRecipients(msg.envelope, func(e *goimap.Envelope) []goimap.Address { return e.To })
+	summary.CC = envelopeRecipients(msg.envelope, func(e *goimap.Envelope) []goimap.Address { return e.Cc })
+	summary.ToCount, summary.CCCount = len(summary.To), len(summary.CC)
 	return summary
 }
 

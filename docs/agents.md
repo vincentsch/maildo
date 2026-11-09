@@ -156,17 +156,50 @@ The same rules help with any automation:
 | `list`, `search` | `.messages`, plus `has_more` and `total` |
 | `read` | `.message`, with the text in `.message.body.content` |
 | `thread` | `.thread.messages`, oldest first, your replies in Sent included |
+| `draft read` | `.draft`, with the text in `.draft.body.content` |
 | `attachments list` | `.attachments` |
+| a preview of a change (`--dry-run`) | `.targets` and `.apply_command` |
 | a change to one message | `.message_id`, `.new_id` and `.undo_commands` |
 | a change to several messages | `.counts`, `.targets` and `.undo_commands` |
 | a send preview (`--dry-run`) | `.message`, `.approval_code` and `.send_command` |
+| `draft delete --dry-run` | `.draft` and `.apply_command` |
+
+Each row in `.messages` of `list` and `search` has these fields:
+
+| Field | What it holds |
+| --- | --- |
+| `id` | the message id that other commands take |
+| `account`, `provider` | the account the message is in, and its provider |
+| `internet_message_id` | the Message-ID header, for `--internet-id` |
+| `thread_id` | the conversation, for `thread --thread-id` |
+| `folder` | the folder, with `path`, `display_name`, `id` and `well_known_name` (such as `inbox`) |
+| `from` | the sender, with `name` and `address` |
+| `to_count`, `cc_count` | how many people the message went to |
+| `subject` | the subject |
+| `received_at`, `sent_at` | when it arrived, and the date the sender's program wrote |
+| `read` | `true` when the message was read |
+| `flagged` | `true` when it has a flag (a star on Gmail) |
+| `has_attachments` | `true` when it has attachments |
+| `importance` | `high`, `normal` or `low`, when the provider says |
+| `preview` | the start of the text |
+| `provider_metadata` | details that only this provider has |
+
+Messages in `thread` have the same fields, except that they list the
+recipients in `to` and `cc` instead of counting them. `read` has them too,
+with `to`, `cc`, `bcc` and `reply_to`, the `body` and the `attachments`.
+Lists of addresses are always there, as `[]` when they are empty.
 
 Messages have two dates. `received_at` is when the message arrived in the
 mailbox, and `sent_at` is the date in the message itself. Lists, threads
 and the previews of changes use the same two names.
 
+A change to one message has `new_id`: the id the message has now. It is
+set after every change. When the id stayed the same, as after a flag or
+after any change on Gmail, `new_id` repeats `message_id`.
+
 A change to several messages counts them in `counts`, with `total`,
 `succeeded`, `failed` and `skipped`. Each row in `targets` has the old `id`,
-the `new_id` after the change and a `status`. On IMAP and Outlook a message
-that moves to another folder gets a new id. On Gmail the id stays the same,
-and `new_id` repeats it.
+a `status`, and for each message that changed or was skipped, the `new_id`.
+On IMAP and Outlook a message that moves to another folder gets a new id.
+A row that failed has no `new_id`, because maildo cannot be sure where the
+message is. Its `outcome` says whether the change may have happened.

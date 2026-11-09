@@ -62,7 +62,9 @@ Junk are searched only when you name them with `--folder`, for example
 
 Each row has a `preview` of the message. Use it to sort out which messages
 matter before you read whole messages. `has_more` and `--page N` page
-through long results.
+through long results. Rows also have `from`, `subject`, `read`, `flagged`
+and `has_attachments`. Address lists such as `to` and `cc` in `read` and
+`thread` are `[]` when empty.
 
 ## Changing
 

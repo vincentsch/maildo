@@ -50,7 +50,7 @@ type MessageRestoreRequest struct {
 // MessageReadStateRequest marks one message read or unread.
 type MessageReadStateRequest struct {
 	MessageID string `json:"message_id"`
-	IsRead    bool   `json:"is_read"`
+	IsRead    bool   `json:"read"`
 }
 
 // MessageFlagRequest sets or clears the flag of one message.

@@ -29,7 +29,7 @@ var readMessageMetadataSelect = strings.Join([]string{
 	"id", "internetMessageId", "conversationId", "parentFolderId", "subject",
 	"from", "sender", "replyTo", "toRecipients", "ccRecipients", "bccRecipients",
 	"receivedDateTime", "sentDateTime", "createdDateTime", "lastModifiedDateTime",
-	"isRead", "importance", "categories", "hasAttachments", "bodyPreview",
+	"isRead", "flag", "importance", "categories", "hasAttachments", "bodyPreview",
 	"internetMessageHeaders",
 }, ",")
 
@@ -40,19 +40,19 @@ var readMessageBodySelect = strings.Join([]string{
 	"id", "internetMessageId", "conversationId", "parentFolderId", "subject",
 	"from", "sender", "replyTo", "toRecipients", "ccRecipients", "bccRecipients",
 	"receivedDateTime", "sentDateTime", "createdDateTime", "lastModifiedDateTime",
-	"isRead", "importance", "categories", "hasAttachments", "bodyPreview", "body",
+	"isRead", "flag", "importance", "categories", "hasAttachments", "bodyPreview", "body",
 	"internetMessageHeaders",
 }, ",")
 
 // threadMessageSelect leaves out the body, so one large message cannot make
-// a thread view fail. It asks for toRecipients although the thread view does
-// not show them: without them, Graph can send the sender of a message that
-// was sent over SMTP as an Exchange address (/O=EXCHANGELABS/...) instead of
-// a mail address.
+// a thread view fail. toRecipients matters for more than the To list:
+// without it, Graph can send the sender of a message that was sent over
+// SMTP as an Exchange address (/O=EXCHANGELABS/...) instead of a mail
+// address.
 var threadMessageSelect = strings.Join([]string{
 	"id", "internetMessageId", "conversationId", "parentFolderId", "subject",
-	"from", "toRecipients", "receivedDateTime", "sentDateTime", "isRead", "importance",
-	"hasAttachments", "bodyPreview",
+	"from", "toRecipients", "ccRecipients", "receivedDateTime", "sentDateTime", "isRead", "importance",
+	"hasAttachments", "bodyPreview", "flag",
 }, ",")
 
 // readThreadSourceSelect reads only what is needed to find a message's
@@ -88,6 +88,7 @@ type graphFullMessage struct {
 	CreatedDateTime        string           `json:"createdDateTime"`
 	LastModifiedDateTime   string           `json:"lastModifiedDateTime"`
 	IsRead                 bool             `json:"isRead"`
+	Flag                   *graphFlag       `json:"flag"`
 	Importance             string           `json:"importance"`
 	Categories             []string         `json:"categories"`
 	HasAttachments         bool             `json:"hasAttachments"`
@@ -679,6 +680,7 @@ func (c *Client) toMessage(g graphFullMessage, body mail.MessageBody) mail.Messa
 		Subject:           g.Subject,
 		Headers:           headers(g.InternetMessageHeaders),
 		IsRead:            g.IsRead,
+		Flagged:           g.Flag != nil && g.Flag.FlagStatus == "flagged",
 		Importance:        g.Importance,
 		Categories:        append([]string(nil), g.Categories...),
 		HasAttachments:    g.HasAttachments,
@@ -712,8 +714,11 @@ func (c *Client) toThreadMessage(g graphMessage) mail.ThreadMessage {
 		ThreadID:          g.ConversationID,
 		Folder:            mail.FolderSummary{ID: g.ParentFolderID},
 		From:              recipient(g.From),
+		To:                recipients(g.ToRecipients),
+		CC:                recipients(g.CcRecipients),
 		Subject:           g.Subject,
 		IsRead:            g.IsRead,
+		Flagged:           g.Flag != nil && g.Flag.FlagStatus == "flagged",
 		Importance:        g.Importance,
 		HasAttachments:    g.HasAttachments,
 		Preview:           g.BodyPreview,

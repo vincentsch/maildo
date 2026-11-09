@@ -159,6 +159,10 @@ maildo attachments download <id> --all --to <folder> --json
   `--limit`. `has_more` says whether `--page 2` has more.
 - Each row has a `preview` with the start of the message. Use it to sort out
   which messages matter before you read whole messages.
+- A row also has `from`, `subject`, `folder`, `to_count` and `cc_count`,
+  and the flags `read`, `flagged` and `has_attachments`. The table of all
+  row fields is in `docs/agents.md`. Lists of addresses, such as `to` and
+  `cc` in `read`, are always there, as `[]` when they are empty.
 - Dates are in `received_at` (when the message arrived) and `sent_at` (the
   date the sender's program wrote). Previews of changes use the same names.
 - The search syntax is in `docs/search.md`. Trash and Junk are left out
@@ -168,7 +172,7 @@ maildo attachments download <id> --all --to <folder> --json
   values of the same operator.
 - `thread` lists the whole conversation, oldest first, in `.thread.messages`.
   That includes your own replies in Sent. The messages look like rows from
-  `list`.
+  `list`, but they list the recipients in `to` and `cc`.
 - In `attachments list`, `size` is the size of the file. When
   `decoded_size` is missing, `size` is an estimate, and `saved_size` after
   the download can differ by a few bytes. The file is still complete.
@@ -205,7 +209,8 @@ Trash and Junk.
 What a change returns:
 
 - For one message: `applied`, the old id in `message_id` and the id it has
-  now in `new_id`.
+  now in `new_id`. `new_id` is always set; when the id did not change, it
+  repeats `message_id`.
 - For several messages: `applied`, the numbers in `counts` (`total`,
   `succeeded`, `failed` and `skipped`) and one row per message in
   `targets`. Each row has the old `id`, the `new_id` and a `status`.

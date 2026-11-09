@@ -92,7 +92,7 @@ type attachmentDownloadRow struct {
 	Name         string                           `json:"name,omitempty"`
 	ContentType  string                           `json:"content_type,omitempty"`
 	Size         int64                            `json:"size,omitempty"`
-	IsInline     bool                             `json:"is_inline"`
+	IsInline     bool                             `json:"inline"`
 	Kind         mail.AttachmentKind              `json:"kind,omitempty"`
 	ProviderMeta *mail.AttachmentProviderMetadata `json:"provider_metadata,omitempty"`
 	// EncodedSize and DecodedSize are there only when the provider knows

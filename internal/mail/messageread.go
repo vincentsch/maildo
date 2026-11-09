@@ -1,6 +1,7 @@
 package mail
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"time"
@@ -88,7 +89,7 @@ type Attachment struct {
 	Name             string                      `json:"name,omitempty"`
 	ContentType      string                      `json:"content_type,omitempty"`
 	Size             int64                       `json:"size,omitempty"`
-	IsInline         bool                        `json:"is_inline"`
+	IsInline         bool                        `json:"inline"`
 	ContentID        string                      `json:"content_id,omitempty"`
 	Kind             AttachmentKind              `json:"kind,omitempty"`
 	ProviderType     string                      `json:"provider_type,omitempty"`
@@ -104,7 +105,7 @@ func (a Attachment) MarshalJSON() ([]byte, error) {
 		Name         string                      `json:"name,omitempty"`
 		ContentType  string                      `json:"content_type,omitempty"`
 		Size         int64                       `json:"size,omitempty"`
-		IsInline     bool                        `json:"is_inline"`
+		IsInline     bool                        `json:"inline"`
 		ContentID    string                      `json:"content_id,omitempty"`
 		Kind         AttachmentKind              `json:"kind,omitempty"`
 		ProviderType string                      `json:"provider_type,omitempty"`
@@ -124,7 +125,7 @@ func (a Attachment) MarshalJSON() ([]byte, error) {
 		ProviderMeta: a.ProviderMeta,
 	}
 	out.EncodedSize, out.DecodedSize = a.KnownSizes()
-	return json.Marshal(out)
+	return MarshalPlainJSON(out)
 }
 
 // KnownSizes are the encoded and decoded sizes when the provider knows
@@ -242,17 +243,18 @@ type Message struct {
 	Folder            FolderSummary            `json:"folder"`
 	From              Recipient                `json:"from"`
 	Sender            *Recipient               `json:"sender,omitempty"`
-	ReplyTo           []Recipient              `json:"reply_to,omitempty"`
-	To                []Recipient              `json:"to,omitempty"`
-	CC                []Recipient              `json:"cc,omitempty"`
-	BCC               []Recipient              `json:"bcc,omitempty"`
+	ReplyTo           []Recipient              `json:"reply_to"`
+	To                []Recipient              `json:"to"`
+	CC                []Recipient              `json:"cc"`
+	BCC               []Recipient              `json:"bcc"`
 	Subject           string                   `json:"subject"`
 	ReceivedAt        *time.Time               `json:"received_at,omitempty"`
 	SentAt            *time.Time               `json:"sent_at,omitempty"`
 	CreatedAt         *time.Time               `json:"created_at,omitempty"`
 	LastModifiedAt    *time.Time               `json:"last_modified_at,omitempty"`
 	Headers           []Header                 `json:"headers,omitempty"`
-	IsRead            bool                     `json:"is_read"`
+	IsRead            bool                     `json:"read"`
+	Flagged           bool                     `json:"flagged"`
 	Importance        string                   `json:"importance,omitempty"`
 	Categories        []string                 `json:"categories,omitempty"`
 	HasAttachments    bool                     `json:"has_attachments"`
@@ -264,6 +266,37 @@ type Message struct {
 	Warnings []string `json:"warnings,omitempty"`
 }
 
+// MarshalJSON writes empty address lists as [] instead of null, so a
+// script finds every list.
+func (m Message) MarshalJSON() ([]byte, error) {
+	type plain Message
+	p := plain(m)
+	for _, list := range []*[]Recipient{&p.ReplyTo, &p.To, &p.CC, &p.BCC} {
+		*list = NonNilRecipients(*list)
+	}
+	return MarshalPlainJSON(p)
+}
+
+// NonNilRecipients returns list, or an empty list when it is nil.
+func NonNilRecipients(list []Recipient) []Recipient {
+	if list == nil {
+		return []Recipient{}
+	}
+	return list
+}
+
+// MarshalPlainJSON encodes v like the rest of maildo's output: < > and &
+// stay as they are, so a Message-ID reads <id@example.com>.
+func MarshalPlainJSON(v any) ([]byte, error) {
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(v); err != nil {
+		return nil, err
+	}
+	return bytes.TrimRight(b.Bytes(), "\n"), nil
+}
+
 // ThreadMessage is one message of a thread, without its body.
 type ThreadMessage struct {
 	Account           string        `json:"account"`
@@ -273,13 +306,24 @@ type ThreadMessage struct {
 	ThreadID          string        `json:"thread_id,omitempty"`
 	Folder            FolderSummary `json:"folder"`
 	From              Recipient     `json:"from"`
+	To                []Recipient   `json:"to"`
+	CC                []Recipient   `json:"cc"`
 	Subject           string        `json:"subject"`
 	ReceivedAt        *time.Time    `json:"received_at,omitempty"`
 	SentAt            *time.Time    `json:"sent_at,omitempty"`
-	IsRead            bool          `json:"is_read"`
+	IsRead            bool          `json:"read"`
+	Flagged           bool          `json:"flagged"`
 	Importance        string        `json:"importance,omitempty"`
 	HasAttachments    bool          `json:"has_attachments"`
 	Preview           string        `json:"preview,omitempty"`
+}
+
+// MarshalJSON writes empty address lists as [] instead of null.
+func (m ThreadMessage) MarshalJSON() ([]byte, error) {
+	type plain ThreadMessage
+	p := plain(m)
+	p.To, p.CC = NonNilRecipients(p.To), NonNilRecipients(p.CC)
+	return MarshalPlainJSON(p)
 }
 
 // Thread is a whole thread. Its messages come without bodies.

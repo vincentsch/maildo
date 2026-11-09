@@ -62,9 +62,13 @@ type graphMessage struct {
 	Importance        string           `json:"importance"`
 	HasAttachments    bool             `json:"hasAttachments"`
 	BodyPreview       string           `json:"bodyPreview"`
-	Flag              *struct {
-		FlagStatus string `json:"flagStatus"`
-	} `json:"flag"`
+	Flag              *graphFlag       `json:"flag"`
+}
+
+// graphFlag is Outlook's follow-up flag. maildo calls a message flagged
+// when its status is "flagged".
+type graphFlag struct {
+	FlagStatus string `json:"flagStatus"`
 }
 
 type graphMessagePage struct {

@@ -196,7 +196,7 @@ type row struct {
 	InternetMessageID string `json:"internet_message_id"`
 	Subject           string `json:"subject"`
 	Preview           string `json:"preview"`
-	IsRead            bool   `json:"is_read"`
+	IsRead            bool   `json:"read"`
 	Flagged           bool   `json:"flagged"`
 	From              struct {
 		Name    string `json:"name"`

@@ -392,6 +392,7 @@ func (c *accountClient) toMessage(msg imapFetchedMessage, body mail.MessageBody)
 		Subject:           envelopeSubject(msg.envelope),
 		Headers:           msg.header.visible,
 		IsRead:            hasFlag(msg.flags, goimap.FlagSeen),
+		Flagged:           flagged,
 		HasAttachments:    len(attachments) > 0,
 		Attachments:       attachments,
 		Body:              body,
