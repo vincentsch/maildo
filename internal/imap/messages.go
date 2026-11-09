@@ -646,6 +646,10 @@ func (c *accountClient) fetchMessages(ctx context.Context, session *imapSession,
 			}
 		}
 	}
+	whole, err := c.refetchHeaders(ctx, session, byUID, header, op)
+	if err != nil {
+		return nil, nil, err
+	}
 	var out []imapFetchedMessage
 	var skipped []string
 	for _, uid := range uids {
@@ -653,7 +657,11 @@ func (c *accountClient) fetchMessages(ctx context.Context, session *imapSession,
 		if !ok {
 			continue
 		}
-		msg, err := c.fetchedMessage(folder, uid, buf, buf.FindBodySection(header))
+		raw := buf.FindBodySection(header)
+		if fields, ok := whole[uid]; ok {
+			raw = fields
+		}
+		msg, err := c.fetchedMessage(folder, uid, buf, raw)
 		if err != nil {
 			skipped = append(skipped, fmt.Sprintf("left out message %d in %s: %v", uid, folderLabel(folder), err))
 			continue
@@ -666,6 +674,69 @@ func (c *accountClient) fetchMessages(ctx context.Context, session *imapSession,
 		}
 	}
 	return out, skipped, nil
+}
+
+// refetchHeaders works around servers, GreenMail among them, that send
+// nothing when maildo asks for the thread header fields by name. A message
+// with a Message-ID in its envelope but no header fields gets its whole
+// header fetched, and maildo keeps those fields from it. Without them, a
+// thread would miss the replies to a message.
+func (c *accountClient) refetchHeaders(ctx context.Context, session *imapSession, byUID map[uint32]*imapclient.FetchMessageBuffer, fields *goimap.FetchItemBodySection, op errs.ProviderOperation) (map[uint32][]byte, error) {
+	var uids []uint32
+	for uid, buf := range byUID {
+		if len(bytes.TrimSpace(buf.FindBodySection(fields))) == 0 && buf.Envelope != nil && strings.TrimSpace(buf.Envelope.MessageID) != "" {
+			uids = append(uids, uid)
+		}
+	}
+	if len(uids) == 0 {
+		return nil, nil
+	}
+	sort.Slice(uids, func(i, j int) bool { return uids[i] < uids[j] })
+	whole := &goimap.FetchItemBodySection{Specifier: goimap.PartSpecifierHeader, Peek: true}
+	out := map[uint32][]byte{}
+	for start := 0; start < len(uids); start += fetchBatch {
+		end := min(start+fetchBatch, len(uids))
+		var msgs []*imapclient.FetchMessageBuffer
+		err := session.withReadCommand(ctx, op, func(dep *imapclient.Client) error {
+			var err error
+			msgs, err = dep.Fetch(uidSetOf(uids[start:end]), &goimap.FetchOptions{UID: true, BodySection: []*goimap.FetchItemBodySection{whole}}).Collect()
+			return err
+		})
+		if err != nil {
+			return nil, err
+		}
+		for _, msg := range msgs {
+			if msg != nil && msg.UID != 0 {
+				out[uint32(msg.UID)] = headerFields(msg.FindBodySection(whole), fields.HeaderFields)
+			}
+		}
+	}
+	return out, nil
+}
+
+// headerFields keeps only the named fields of a header block, with their
+// folded continuation lines.
+func headerFields(raw []byte, names []string) []byte {
+	var out bytes.Buffer
+	keep := false
+	for _, line := range strings.SplitAfter(string(raw), "\n") {
+		if strings.TrimSpace(line) == "" {
+			break
+		}
+		if line[0] != ' ' && line[0] != '\t' {
+			name, _, _ := strings.Cut(line, ":")
+			keep = false
+			for _, want := range names {
+				if strings.EqualFold(strings.TrimSpace(name), want) {
+					keep = true
+				}
+			}
+		}
+		if keep {
+			out.WriteString(line)
+		}
+	}
+	return out.Bytes()
 }
 
 // fetchedMessage turns one FETCH answer into maildo's message record.

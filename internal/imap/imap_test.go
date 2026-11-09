@@ -1594,3 +1594,18 @@ func assertProductReason(t *testing.T, err error, reason string) {
 // save a copy in Sent. These tests are about SMTP, so it hangs up; the copy
 // then becomes a warning.
 func refuseSentCopy(conn net.Conn) { _ = conn.Close() }
+
+// When a server sends nothing for the named thread headers, maildo takes
+// them from the whole header, folded lines included, and nothing else.
+func TestHeaderFieldsKeepsOnlyTheThreadHeaders(t *testing.T) {
+	raw := "From: b@x.test\r\nReferences: <a@x.test>\r\n <b@x.test>\r\nSubject: Re: hi\r\nmessage-id: <c@x.test>\r\nIn-Reply-To: <b@x.test>\r\n\r\n"
+	got := string(headerFields([]byte(raw), threadHeaderFields))
+	want := "References: <a@x.test>\r\n <b@x.test>\r\nmessage-id: <c@x.test>\r\nIn-Reply-To: <b@x.test>\r\n"
+	if got != want {
+		t.Fatalf("headerFields = %q, want %q", got, want)
+	}
+	header := parseHeaderBlockLenient([]byte(got))
+	if header.messageID != "<c@x.test>" || strings.Join(header.references, " ") != "<a@x.test> <b@x.test>" || strings.Join(header.inReplyTo, " ") != "<b@x.test>" {
+		t.Fatalf("parsed = %+v", header)
+	}
+}
