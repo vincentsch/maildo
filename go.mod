@@ -9,7 +9,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.9
-	github.com/vincentsch/rungrad v0.3.3
+	github.com/vincentsch/rungrad v0.3.4
 	github.com/yuin/goldmark v1.8.2
 	golang.org/x/net v0.35.0
 	golang.org/x/sys v0.30.0
