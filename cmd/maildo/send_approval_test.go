@@ -215,15 +215,17 @@ func TestApprovalCodeCoversTheWholeMessage(t *testing.T) {
 		t.Fatal("line endings changed the code")
 	}
 	changes := map[string]func(*mail.SendContent){
-		"from":     func(c *mail.SendContent) { c.From.Address = "other@example.test" },
-		"to":       func(c *mail.SendContent) { c.To = []mail.Recipient{{Address: "eve@example.test"}} },
-		"to name":  func(c *mail.SendContent) { c.To = []mail.Recipient{{Name: "Eve", Address: "ann@example.test"}} },
-		"cc":       func(c *mail.SendContent) { c.CC = []mail.Recipient{{Address: "ann@example.test"}} },
-		"bcc":      func(c *mail.SendContent) { c.BCC = []mail.Recipient{{Address: "eve@example.test"}} },
-		"reply-to": func(c *mail.SendContent) { c.ReplyTo = []mail.Recipient{{Address: "eve@example.test"}} },
-		"subject":  func(c *mail.SendContent) { c.Subject = "Quote!" },
-		"text":     func(c *mail.SendContent) { c.Text += " " },
-		"html":     func(c *mail.SendContent) { c.HTML += " " },
+		"from":        func(c *mail.SendContent) { c.From.Address = "other@example.test" },
+		"to":          func(c *mail.SendContent) { c.To = []mail.Recipient{{Address: "eve@example.test"}} },
+		"to name":     func(c *mail.SendContent) { c.To = []mail.Recipient{{Name: "Eve", Address: "ann@example.test"}} },
+		"cc":          func(c *mail.SendContent) { c.CC = []mail.Recipient{{Address: "ann@example.test"}} },
+		"bcc":         func(c *mail.SendContent) { c.BCC = []mail.Recipient{{Address: "eve@example.test"}} },
+		"reply-to":    func(c *mail.SendContent) { c.ReplyTo = []mail.Recipient{{Address: "eve@example.test"}} },
+		"subject":     func(c *mail.SendContent) { c.Subject = "Quote!" },
+		"in-reply-to": func(c *mail.SendContent) { c.InReplyTo = "<other@example.test>" },
+		"references":  func(c *mail.SendContent) { c.References = []string{"<other@example.test>"} },
+		"text":        func(c *mail.SendContent) { c.Text += " " },
+		"html":        func(c *mail.SendContent) { c.HTML += " " },
 		"attachment name": func(c *mail.SendContent) {
 			c.Attachments = []mail.SendAttachment{{Name: "quote2.pdf", Size: 3, SHA256: [32]byte{1}}, c.Attachments[1]}
 		},

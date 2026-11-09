@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,13 +45,66 @@ func TestSendDryRunShowsRecipientsSubjectAndBody(t *testing.T) {
 	if res.Exit != 0 {
 		t.Fatalf("dry run: %s", res.Stderr)
 	}
-	for _, want := range []string{"Would send this message from posteo:", "To:       Clara Client <clara@example.org>", "Subject:  Quote for October\n\n  Hi Clara, here is the quote.\n", "Nothing was sent. The approval code for this message is ", "--account posteo", "--approve ", "--yes"} {
+	for _, want := range []string{"Would send this message from posteo:", "To:       Clara Client <clara@example.org>",
+		// Empty fields still get a line, so the preview says there are none.
+		"  Cc:       (none)\n  Bcc:      (none)\n  Reply-To: (none)\n  Subject:  Quote for October\n  Attached: (none)\n\n  Hi Clara, here is the quote.\n",
+		// The login gave no name, so the preview says how to add one.
+		"The From line has only your address and no name. To add your name, run:\n  maildo config set sender_name \"Your Name\" --account posteo\n",
+		"Nothing was sent. The approval code for this message is ", "--account posteo", "--approve ", "--yes"} {
 		if !strings.Contains(res.Stdout, want) {
 			t.Fatalf("preview lacks %q:\n%s", want, res.Stdout)
 		}
 	}
 	if len(h.server.Sent()) != 0 {
 		t.Fatal("dry run sent mail")
+	}
+	if res := h.run("config", "set", "sender_name", "Me Tester", "--account", "posteo"); res.Exit != 0 {
+		t.Fatalf("config set: %s", res.Stderr)
+	}
+	named := h.run("send", "--to", "clara@example.org", "--subject", "Quote", "--body", "Hi", "--dry-run")
+	if !strings.Contains(named.Stdout, "From:     Me Tester <me@posteo.de>") || strings.Contains(named.Stdout, "no name") {
+		t.Fatalf("preview with a sender name:\n%s", named.Stdout)
+	}
+}
+
+// A reply preview lists every field a person checks, with empty lists as
+// [], and the Message-IDs that keep the reply in its conversation. The mail
+// that goes out has the same headers.
+func TestReplyPreviewShowsEveryFieldAndTheThread(t *testing.T) {
+	h := newSendHarness(t)
+	h.server.Append("INBOX", "From: Clara Client <clara@example.org>\r\nTo: me@posteo.de\r\nSubject: Kickoff\r\nMessage-ID: <second@example.org>\r\nIn-Reply-To: <first@example.org>\r\nReferences: <first@example.org>\r\n\r\nTuesday?\r\n", time.Now())
+	var found searchResult
+	if res := h.run("search", "kickoff", "--json"); res.JSON(&found) != nil || len(found.Messages) != 1 {
+		t.Fatalf("search: %s%s", res.Stdout, res.Stderr)
+	}
+	args := []string{"reply", "--id", found.Messages[0].ID, "--body", "Tuesday works.", "--send"}
+	res := h.run(append(args, "--dry-run", "--json")...)
+	var preview struct {
+		Message map[string]json.RawMessage `json:"message"`
+	}
+	decodeOK(t, res, &preview)
+	for _, key := range []string{"cc", "bcc", "reply_to", "attachments"} {
+		if got := string(preview.Message[key]); got != "[]" {
+			t.Errorf("message.%s = %s, want []", key, got)
+		}
+	}
+	if got := string(preview.Message["in_reply_to"]); got != `"<second@example.org>"` {
+		t.Errorf("message.in_reply_to = %s", got)
+	}
+	var refs []string
+	if err := json.Unmarshal(preview.Message["references"], &refs); err != nil || strings.Join(refs, " ") != "<first@example.org> <second@example.org>" {
+		t.Errorf("message.references = %s", preview.Message["references"])
+	}
+	human := h.run(append(args, "--dry-run")...)
+	if !strings.Contains(human.Stdout, "  Thread:   replies to <second@example.org>\n") {
+		t.Fatalf("human preview:\n%s", human.Stdout)
+	}
+	if sent := approvedRun(t, h.run, args...); sent.Exit != 0 {
+		t.Fatalf("send: %s%s", sent.Stdout, sent.Stderr)
+	}
+	mails := h.server.Sent()
+	if len(mails) != 1 || !strings.Contains(string(mails[0].Data), "In-Reply-To: <second@example.org>") || !strings.Contains(string(mails[0].Data), "References: <first@example.org> <second@example.org>") {
+		t.Fatalf("sent mail = %+v", mails)
 	}
 }
 

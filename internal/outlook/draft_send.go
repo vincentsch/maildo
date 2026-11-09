@@ -165,9 +165,17 @@ func (c *Client) draftToSend(g graphDraftSnapshot) (draftToSend, error) {
 	}
 	var props []any
 	for _, p := range g.ExtendedProperties {
-		if p.Value != "" && (strings.EqualFold(p.ID, inReplyToProperty) || strings.EqualFold(p.ID, referencesProperty)) {
-			props = append(props, map[string]any{"id": p.ID, "value": p.Value})
+		switch {
+		case p.Value == "":
+			continue
+		case strings.EqualFold(p.ID, inReplyToProperty):
+			out.content.InReplyTo = strings.TrimSpace(p.Value)
+		case strings.EqualFold(p.ID, referencesProperty):
+			out.content.References = strings.Fields(p.Value)
+		default:
+			continue
 		}
+		props = append(props, map[string]any{"id": p.ID, "value": p.Value})
 	}
 	if len(props) > 0 {
 		message["singleValueExtendedProperties"] = props

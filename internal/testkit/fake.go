@@ -2257,7 +2257,7 @@ func (c FakeDraftClient) ValidateReplyDraft(_ context.Context, req provider.Repl
 		if req.Mode == mail.ReplyModeReplyAll {
 			out.CC = append([]mail.Recipient(nil), source.CC...)
 		}
-		content := fakeSendContent(mail.Draft{To: out.To, CC: out.CC, Subject: out.Subject, Body: messageBodyFromOutbound(req.Body)})
+		content := fakeReplyContent(mail.Draft{To: out.To, CC: out.CC, Subject: out.Subject, Body: messageBodyFromOutbound(req.Body)}, source)
 		out.Send = &content
 		return nil
 	})
@@ -2291,7 +2291,7 @@ func (c FakeDraftClient) CreateReplyDraft(_ context.Context, req provider.ReplyD
 			if req.Check == nil {
 				return errs.NewProviderClientContractInvalid()
 			}
-			if err := req.Check(fakeSendContent(draft)); err != nil {
+			if err := req.Check(fakeReplyContent(draft, source)); err != nil {
 				return err
 			}
 			c.state.SendCalls.Add(1)
@@ -2681,6 +2681,17 @@ func (c FakeDraftClient) draftFromOutbound(id string, msg mail.OutboundMessage) 
 		Body:         messageBodyFromOutbound(msg.Body),
 		ProviderMeta: fakeDraftMeta(mail.MetadataDraft),
 	}
+}
+
+// fakeReplyContent is what the fake would hand over when it sends a reply
+// to source: the draft with the headers that keep it in the conversation.
+func fakeReplyContent(draft mail.Draft, source provider.ComposeSourceMaterial) mail.SendContent {
+	content := fakeSendContent(draft)
+	if source.InternetMessageID != "" {
+		content.InReplyTo = source.InternetMessageID
+		content.References = append(append([]string(nil), source.References...), source.InternetMessageID)
+	}
+	return content
 }
 
 // fakeSendContent is what the fake would hand over when it sends draft.

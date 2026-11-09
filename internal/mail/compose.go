@@ -191,6 +191,10 @@ type SendContent struct {
 	Text        string
 	HTML        string
 	Attachments []SendAttachment
+	// InReplyTo and References are the Message-IDs that keep a reply in
+	// its conversation. A new message has neither.
+	InReplyTo  string
+	References []string
 }
 
 // SendAttachment is one attachment of a message to send.

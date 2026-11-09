@@ -174,6 +174,7 @@ func humanDraftPreview(acct provider.ResolvedAccount, msg outgoing, command stri
 		fmt.Fprintf(w, "Would save this draft in %s:\n\n", plainField(acct.Name))
 		writeOutgoing(w, msg, true)
 		fmt.Fprintln(w)
+		writeSenderNote(w, acct, msg)
 		fmt.Fprintln(w, "Nothing was saved. To save it, run:")
 		fmt.Fprintln(w, "  "+plainField(command))
 	}

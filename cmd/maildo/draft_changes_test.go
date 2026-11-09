@@ -19,7 +19,7 @@ func TestIMAPDraftChangesAreReadableAndLogged(t *testing.T) {
 	for _, want := range []string{
 		"Would save this draft in posteo:",
 		"  To:       clara@example.org\n",
-		"  Subject:  Quote\n\n  First version\n",
+		"  Subject:  Quote\n  Attached: (none)\n\n  First version\n",
 		"Nothing was saved. To save it, run:\n  maildo draft create",
 		"--account posteo",
 	} {

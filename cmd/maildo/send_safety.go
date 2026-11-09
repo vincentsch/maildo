@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base32"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"path/filepath"
@@ -38,16 +40,22 @@ import (
 //  6. The send is written to the action log, whether it worked or not.
 
 // outgoing is a message about to be sent or saved, as previews show it.
+// The recipient lists and attachments are always in the JSON, as [] when
+// they are empty, so a person or a script can check each of them.
 type outgoing struct {
-	From        *mail.Recipient      `json:"from,omitempty"`
-	To          []mail.Recipient     `json:"to"`
-	CC          []mail.Recipient     `json:"cc,omitempty"`
-	BCC         []mail.Recipient     `json:"bcc,omitempty"`
-	ReplyTo     []mail.Recipient     `json:"reply_to,omitempty"`
-	Subject     string               `json:"subject"`
+	From    *mail.Recipient  `json:"from,omitempty"`
+	To      []mail.Recipient `json:"to"`
+	CC      []mail.Recipient `json:"cc"`
+	BCC     []mail.Recipient `json:"bcc"`
+	ReplyTo []mail.Recipient `json:"reply_to"`
+	Subject string           `json:"subject"`
+	// InReplyTo and References keep a reply in its conversation. Both are
+	// empty for a new message.
+	InReplyTo   string               `json:"in_reply_to"`
+	References  []string             `json:"references"`
 	Body        string               `json:"body"`
 	BodyHTML    string               `json:"body_html,omitempty"`
-	Attachments []outgoingAttachment `json:"attachments,omitempty"`
+	Attachments []outgoingAttachment `json:"attachments"`
 	// AttachmentsLeftOut are attachments of a forwarded message that do
 	// not go along.
 	AttachmentsLeftOut []string `json:"attachments_left_out,omitempty"`
@@ -67,6 +75,31 @@ type outgoingAttachment struct {
 	Inline      bool   `json:"inline,omitempty"`
 }
 
+// MarshalJSON writes the empty lists as [] instead of null.
+func (o outgoing) MarshalJSON() ([]byte, error) {
+	type plain outgoing
+	p := plain(o)
+	for _, list := range []*[]mail.Recipient{&p.To, &p.CC, &p.BCC, &p.ReplyTo} {
+		if *list == nil {
+			*list = []mail.Recipient{}
+		}
+	}
+	if p.References == nil {
+		p.References = []string{}
+	}
+	if p.Attachments == nil {
+		p.Attachments = []outgoingAttachment{}
+	}
+	// Keep < and > as they are, like the rest of the output.
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(p); err != nil {
+		return nil, err
+	}
+	return bytes.TrimRight(b.Bytes(), "\n"), nil
+}
+
 func (o outgoing) recipients() []mail.Recipient {
 	out := append([]mail.Recipient(nil), o.To...)
 	out = append(out, o.CC...)
@@ -81,6 +114,8 @@ func newOutgoing(c mail.SendContent) outgoing {
 		BCC:             c.BCC,
 		ReplyTo:         c.ReplyTo,
 		Subject:         c.Subject,
+		InReplyTo:       c.InReplyTo,
+		References:      c.References,
 		Body:            readableBody(c.Text, c.HTML),
 		BodyHTML:        c.HTML,
 		content:         &c,
@@ -162,6 +197,9 @@ func approvalCode(account string, c mail.SendContent) string {
 	people("bcc", c.BCC)
 	people("reply-to", c.ReplyTo)
 	field("subject", c.Subject)
+	field("in-reply-to", c.InReplyTo)
+	field("references", strconv.Itoa(len(c.References)))
+	field(c.References...)
 	field("text", strings.ReplaceAll(c.Text, "\r\n", "\n"))
 	field("html", strings.ReplaceAll(c.HTML, "\r\n", "\n"))
 	field("attachments", strconv.Itoa(len(c.Attachments)))
@@ -270,6 +308,7 @@ func writeComposePreview(f *rungrad.Factory, cmd *cobra.Command, acct provider.R
 		}
 		writeOutgoing(w, p.Message, full)
 		fmt.Fprintln(w)
+		writeSenderNote(w, acct, p.Message)
 		writeSentBefore(w, acct.Name, p.SentBefore)
 		switch {
 		case !p.Send && p.SendCommand == "":
@@ -315,12 +354,18 @@ func writeOutgoing(w io.Writer, msg outgoing, full bool) {
 	} else {
 		field("To", "chosen by the provider from the original message")
 	}
-	field("Cc", recipientsText(msg.CC))
-	field("Bcc", recipientsText(msg.BCC))
-	field("Reply-To", recipientsText(msg.ReplyTo))
+	// Empty fields still get a line, so the preview says when there are
+	// none.
+	field("Cc", firstNonEmpty(recipientsText(msg.CC), "(none)"))
+	field("Bcc", firstNonEmpty(recipientsText(msg.BCC), "(none)"))
+	field("Reply-To", firstNonEmpty(recipientsText(msg.ReplyTo), "(none)"))
 	field("Subject", firstNonEmpty(plainField(msg.Subject), "(no subject)"))
+	if msg.InReplyTo != "" {
+		field("Thread", "replies to "+plainField(msg.InReplyTo))
+	}
+	names := []string{"(none)"}
 	if len(msg.Attachments) > 0 {
-		var names []string
+		names = nil
 		for _, a := range msg.Attachments {
 			size := byteSize(a.Size)
 			if a.Inline {
@@ -328,8 +373,8 @@ func writeOutgoing(w io.Writer, msg outgoing, full bool) {
 			}
 			names = append(names, fmt.Sprintf("%s (%s)", firstNonEmpty(a.Name, "(no name)"), size))
 		}
-		field("Attached", plainField(strings.Join(names, ", ")))
 	}
+	field("Attached", plainField(strings.Join(names, ", ")))
 	if len(msg.AttachmentsLeftOut) > 0 {
 		field("Left out", plainField(strings.Join(msg.AttachmentsLeftOut, ", ")))
 	}
@@ -352,16 +397,28 @@ func writeOutgoing(w io.Writer, msg outgoing, full bool) {
 	}
 }
 
+// writeSenderNote says when From has only the address, and how to add a
+// name. Outlook takes the name from the mailbox, so it gets no note.
+func writeSenderNote(w io.Writer, acct provider.ResolvedAccount, msg outgoing) {
+	if msg.From == nil || strings.TrimSpace(msg.From.Name) != "" || acct.Provider == "outlook" {
+		return
+	}
+	fmt.Fprintln(w, "The From line has only your address and no name. To add your name, run:")
+	fmt.Fprintf(w, "  maildo config set sender_name \"Your Name\" --account %s\n", shellQuote(acct.Name))
+}
+
 // outgoingForReply describes a reply that Outlook writes itself, for the
 // preview of a reply draft. Outlook picks the recipients and adds the quote
-// when it saves the draft, so the preview shows only maildo's part.
-func outgoingForReply(acct provider.ResolvedAccount, subject string, body mail.OutboundBody) outgoing {
+// when it saves the draft, so the preview shows only maildo's part and the
+// Message-ID of the message it answers.
+func outgoingForReply(acct provider.ResolvedAccount, subject, sourceInternetID string, body mail.OutboundBody) outgoing {
 	text, html := provider.MIMEBodies(body)
 	return outgoing{
-		From:     senderOf(acct),
-		Subject:  prefixSubject("Re: ", subject),
-		Body:     readableBody(text, html),
-		BodyHTML: html,
+		From:      senderOf(acct),
+		Subject:   prefixSubject("Re: ", subject),
+		InReplyTo: sourceInternetID,
+		Body:      readableBody(text, html),
+		BodyHTML:  html,
 	}
 }
 
@@ -457,6 +514,7 @@ func (h *handlers) approveSend(f *rungrad.Factory, cmd *cobra.Command, acct prov
 		fmt.Fprintf(f.Stderr, "About to send this message from %s:\n\n", acct.Name)
 		writeOutgoing(f.Stderr, msg, true)
 		fmt.Fprintln(f.Stderr)
+		writeSenderNote(f.Stderr, acct, msg)
 		writeSentBefore(f.Stderr, acct.Name, newSentBefore(previewApproval(sentApprovalsPath(f), code, false)))
 		ok, err := f.Chooser().Confirm("Send this message?", "Yes, send it", "No, cancel")
 		if err != nil || !ok {

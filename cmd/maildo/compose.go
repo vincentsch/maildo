@@ -522,7 +522,7 @@ func (h *handlers) reply(f *rungrad.Factory, cmd *cobra.Command, _ []string) err
 		}
 		native := validated.Send == nil
 		if f.DryRun() && !(replySend && native) {
-			msg := outgoingForReply(acct, subject, finalBody)
+			msg := outgoingForReply(acct, subject, firstNonEmpty(validated.SourceInternetID, sourceInternetID), finalBody)
 			if !native {
 				msg = newOutgoing(*validated.Send)
 			}

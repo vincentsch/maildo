@@ -174,14 +174,16 @@ func prefixedSubject(prefix, subject string) string {
 // parts count as attachments, so nothing that goes out is left out.
 func SendContentOf(msg mimecompose.Message) mail.SendContent {
 	out := mail.SendContent{
-		From:    msg.From,
-		To:      cloneRecipients(msg.To),
-		CC:      cloneRecipients(msg.CC),
-		BCC:     cloneRecipients(msg.BCC),
-		ReplyTo: cloneRecipients(msg.ReplyTo),
-		Subject: msg.Subject,
-		Text:    string(msg.TextBody),
-		HTML:    string(msg.HTMLBody),
+		From:       msg.From,
+		To:         cloneRecipients(msg.To),
+		CC:         cloneRecipients(msg.CC),
+		BCC:        cloneRecipients(msg.BCC),
+		ReplyTo:    cloneRecipients(msg.ReplyTo),
+		Subject:    msg.Subject,
+		Text:       string(msg.TextBody),
+		HTML:       string(msg.HTMLBody),
+		InReplyTo:  msg.InReplyTo,
+		References: cloneStrings(msg.References),
 	}
 	for _, part := range msg.Related {
 		out.Attachments = append(out.Attachments, sendAttachment(part.Filename, part.ContentType, uint64(len(part.Bytes)), true, sha256.Sum256(part.Bytes)))
@@ -196,14 +198,16 @@ func SendContentOf(msg mimecompose.Message) mail.SendContent {
 // SendContentOf does.
 func SendContentOfProjection(p mimecompose.SemanticProjection) mail.SendContent {
 	out := mail.SendContent{
-		From:    p.From,
-		To:      cloneRecipients(p.To),
-		CC:      cloneRecipients(p.CC),
-		BCC:     cloneRecipients(p.BCC),
-		ReplyTo: cloneRecipients(p.ReplyTo),
-		Subject: p.Subject,
-		Text:    string(p.TextBody),
-		HTML:    string(p.HTMLBody),
+		From:       p.From,
+		To:         cloneRecipients(p.To),
+		CC:         cloneRecipients(p.CC),
+		BCC:        cloneRecipients(p.BCC),
+		ReplyTo:    cloneRecipients(p.ReplyTo),
+		Subject:    p.Subject,
+		Text:       string(p.TextBody),
+		HTML:       string(p.HTMLBody),
+		InReplyTo:  p.InReplyTo,
+		References: cloneStrings(p.References),
 	}
 	for _, part := range p.Related {
 		out.Attachments = append(out.Attachments, sendAttachment(part.Filename, part.ContentType, part.DecodedSize, true, part.SHA256))
@@ -243,4 +247,11 @@ func cloneRecipients(in []mail.Recipient) []mail.Recipient {
 		return nil
 	}
 	return append([]mail.Recipient(nil), in...)
+}
+
+func cloneStrings(in []string) []string {
+	if len(in) == 0 {
+		return nil
+	}
+	return append([]string(nil), in...)
 }
