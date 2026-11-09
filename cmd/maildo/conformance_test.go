@@ -519,7 +519,9 @@ func buildMaildoBinary(t *testing.T, tags []string) string {
 	if len(tags) > 0 {
 		args = append(args, "-tags", strings.Join(tags, ","))
 	}
-	args = append(args, "-ldflags", "-X main.version="+conformanceCandidateVersion())
+	// Without VCS stamping the binary keeps the version given here instead of
+	// the one Go reads from git.
+	args = append(args, "-buildvcs=false", "-ldflags", "-X main.version="+conformanceCandidateVersion())
 	args = append(args, "-o", bin, ".")
 	cmd := exec.Command("go", args...)
 	cmd.Env = append(os.Environ(), "GOWORK=off")
