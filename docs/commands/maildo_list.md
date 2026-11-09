@@ -42,9 +42,9 @@ Use --template to format the output with a Go template.
 
 This command requires a credential.
 
-## Metadata
+## Request details
 
-This command can attach request metadata. In advanced-output apps, add `--include-meta` to a supported machine output mode to wrap the result as `{data, meta}`.
+Add `--include-meta` to the JSON output to get the result as `{data, meta}`, where `meta` holds details about the request.
 
 ## Related commands
 

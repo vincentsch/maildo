@@ -49,11 +49,11 @@ This command requires a credential.
 
 ## Preview changes
 
-This command makes changes. Use `--dry-run` to see what would change without changing anything.
+This command changes things. Add `--dry-run` to see what it would change; nothing changes then.
 
-## Metadata
+## Request details
 
-This command can attach request metadata. In advanced-output apps, add `--include-meta` to a supported machine output mode to wrap the result as `{data, meta}`.
+Add `--include-meta` to the JSON output to get the result as `{data, meta}`, where `meta` holds details about the request.
 
 ## Related commands
 
