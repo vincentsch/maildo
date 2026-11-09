@@ -26,8 +26,8 @@ maildo forward --id 3c1f2a7 --body "Preview" --dry-run --json
 - `--body` Message body as text
 - `--body-file` Read the message body from a file, or from stdin with -
 - `--cc` Cc recipient; repeat the flag or separate addresses with commas
-- `--draft` Save the forward as a draft (the default)
-- `--first` With --query, the same as --latest
+- `--draft` Only save a draft; forward does this anyway unless you add --send
+- `--first` With --query, use the first match; matches come newest first, so this is the same as --latest
 - `--full` Show the whole body in the preview, also when it is long
 - `--html` Write the body in HTML; maildo removes unsafe parts
 - `--id` Message id, or a short id from list or search

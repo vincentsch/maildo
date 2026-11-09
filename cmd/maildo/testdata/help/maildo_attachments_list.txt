@@ -29,7 +29,7 @@ Flags:
       --account stringArray   Account to use; repeat it for more than one (default: the active account)
       --all-accounts          Use all your accounts
       --draft-id string       Draft id, or a short id from maildo
-      --first                 With --query, the same as --latest
+      --first                 With --query, use the first match; matches come newest first, so this is the same as --latest
   -h, --help                  help for list
       --id string             Message id, or a short id from list or search
       --internet-id string    Message-ID header of the message, such as <id@example.com>

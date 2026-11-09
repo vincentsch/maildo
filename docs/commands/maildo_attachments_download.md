@@ -24,7 +24,7 @@ maildo attachments download --id 3c1f2a7 --all --to ./attachments --dry-run
 - `--account` Account to use (default: the active account)
 - `--all` Save every attached file
 - `--attachment-id` Id of an attachment to save, from attachments list (repeatable)
-- `--first` With --query, the same as --latest
+- `--first` With --query, use the first match; matches come newest first, so this is the same as --latest
 - `--id` Message id, or a short id from list or search
 - `--internet-id` Message-ID header of the message, such as <id@example.com>
 - `--latest` With --query, use the newest match

@@ -1,5 +1,19 @@
 Reply to a message (saves a draft unless you add --send)
 
+reply saves your reply as a draft. To send it instead, add --send, and run
+the command with --dry-run first to see the whole message.
+
+Below your text, maildo quotes the whole original message, after a line
+such as "On 2026-11-02 12:15 CET, Maria Klein <maria@example.com> wrote:".
+With --quote short it quotes only the start, and with --quote none it adds
+no quote. --quote-language sets the language of that line, en or de; auto
+picks it from your locale.
+
+Pick the message by its id, by its Message-ID with --internet-id, or with
+--query and --latest, which takes the newest match. --first takes the
+first match, which is the same message, because matches come newest
+first. --reply-all also writes to everyone else on the message.
+
 Related commands:
   draft create
   send
@@ -26,8 +40,8 @@ Flags:
       --approve string          Approval code from the --dry-run preview; maildo sends only if the message still matches it, and only once
       --body string             Message body as text
       --body-file string        Read the message body from a file, or from stdin with -
-      --draft                   Save the reply as a draft (the default)
-      --first                   With --query, the same as --latest
+      --draft                   Only save a draft; reply does this anyway unless you add --send
+      --first                   With --query, use the first match; matches come newest first, so this is the same as --latest
       --full                    Show the whole body in the preview, also when it is long
   -h, --help                    help for reply
       --html                    Write the body in HTML; maildo removes unsafe parts

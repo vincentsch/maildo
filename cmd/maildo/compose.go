@@ -18,6 +18,22 @@ import (
 	"github.com/vincentsch/rungrad"
 )
 
+const replyLong = `Reply to a message (saves a draft unless you add --send)
+
+reply saves your reply as a draft. To send it instead, add --send, and run
+the command with --dry-run first to see the whole message.
+
+Below your text, maildo quotes the whole original message, after a line
+such as "On 2026-11-02 12:15 CET, Maria Klein <maria@example.com> wrote:".
+With --quote short it quotes only the start, and with --quote none it adds
+no quote. --quote-language sets the language of that line, en or de; auto
+picks it from your locale.
+
+Pick the message by its id, by its Message-ID with --internet-id, or with
+--query and --latest, which takes the newest match. --first takes the
+first match, which is the same message, because matches come newest
+first. --reply-all also writes to everyone else on the message.`
+
 const draftDeleteLong = `Discard a draft for good
 
 This works like the discard button of a mail program. The draft is removed
@@ -57,9 +73,9 @@ func newComposeModule(h *handlers) composeModule {
 		cmd.Flags().String("internet-id", "", "Message-ID header of the message, such as <id@example.com>")
 		cmd.Flags().String("query", "", "Search for the message; use with --latest or --first")
 		cmd.Flags().Bool("latest", false, "With --query, use the newest match")
-		cmd.Flags().Bool("first", false, "With --query, the same as --latest")
+		cmd.Flags().Bool("first", false, "With --query, use the first match; matches come newest first, so this is the same as --latest")
 		cmd.Flags().Bool("reply-all", false, "Reply to the sender and all other recipients")
-		cmd.Flags().Bool("draft", false, "Save the reply as a draft (the default)")
+		cmd.Flags().Bool("draft", false, "Only save a draft; reply does this anyway unless you add --send")
 		cmd.Flags().Bool("send", false, "Send the reply instead of saving a draft")
 		cmd.Flags().String("quote", "full", "How much of the original to quote: full, short or none")
 		cmd.Flags().String("quote-language", "auto", "Language of the \"On ... wrote:\" line: en, de or auto (from your locale)")
@@ -72,8 +88,8 @@ func newComposeModule(h *handlers) composeModule {
 		cmd.Flags().String("internet-id", "", "Message-ID header of the message, such as <id@example.com>")
 		cmd.Flags().String("query", "", "Search for the message; use with --latest or --first")
 		cmd.Flags().Bool("latest", false, "With --query, use the newest match")
-		cmd.Flags().Bool("first", false, "With --query, the same as --latest")
-		cmd.Flags().Bool("draft", false, "Save the forward as a draft (the default)")
+		cmd.Flags().Bool("first", false, "With --query, use the first match; matches come newest first, so this is the same as --latest")
+		cmd.Flags().Bool("draft", false, "Only save a draft; forward does this anyway unless you add --send")
 		cmd.Flags().Bool("send", false, "Send the forward instead of saving a draft")
 		cmd.Flags().StringArray("to", nil, "To recipient; repeat the flag or separate addresses with commas")
 		cmd.Flags().StringArray("cc", nil, "Cc recipient; repeat the flag or separate addresses with commas")
@@ -209,7 +225,7 @@ func newComposeModule(h *handlers) composeModule {
 			run: h.sendDirect,
 		},
 		{
-			path: "reply", use: "reply [id]", short: "Reply to a message (saves a draft unless you add --send)", groupID: "compose",
+			path: "reply", use: "reply [id]", short: "Reply to a message (saves a draft unless you add --send)", groupID: "compose", long: replyLong,
 			examples: []string{
 				`maildo reply 9eac029 --body "Thanks, paid today."`,
 				`maildo reply --id 3c1f2a7 --account work --body-file reply.md --markdown`,

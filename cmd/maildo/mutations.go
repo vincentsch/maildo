@@ -77,7 +77,7 @@ func newMutationsModule(h *handlers) mutationsModule {
 		}
 		cmd.Flags().String("internet-id", "", "Message-ID header of the message, such as <id@example.com>")
 		cmd.Flags().Bool("latest", false, "With --query, use the newest match")
-		cmd.Flags().Bool("first", false, "With --query, the same as --latest")
+		cmd.Flags().Bool("first", false, "With --query, use the first match; matches come newest first, so this is the same as --latest")
 		cmd.Flags().String("folder", "", "With --query, search only this folder; without it, Sent, Drafts, Trash and Junk are left out (restore looks only in Trash and Junk)")
 	}
 	singleSelectorFlags := func(cmd *cobra.Command) { selectorFlags(cmd, false) }

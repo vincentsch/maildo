@@ -23,7 +23,7 @@ maildo categories set --query "invoice" --all --category Client --dry-run --json
 - `--all` With --query, use every match, up to --max-targets
 - `--apply` Make the change; without it, a change to more than one message only shows a preview
 - `--category` Category name (repeatable)
-- `--first` With --query, the same as --latest
+- `--first` With --query, use the first match; matches come newest first, so this is the same as --latest
 - `--folder` With --query, search only this folder; without it, Sent, Drafts, Trash and Junk are left out (restore looks only in Trash and Junk)
 - `--id` Message id, or a short id from list or search (repeatable)
 - `--ids-file` Read message ids from a file, one per line, or from stdin with -

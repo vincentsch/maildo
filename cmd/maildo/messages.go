@@ -85,7 +85,7 @@ func newMessagesModule(h *handlers) messagesModule {
 				cmd.Flags().String("internet-id", "", "Message-ID header of the message, such as <id@example.com>")
 				cmd.Flags().String("query", "", "Search for the message; use with --latest or --first")
 				cmd.Flags().Bool("latest", false, "With --query, use the newest match")
-				cmd.Flags().Bool("first", false, "With --query, the same as --latest")
+				cmd.Flags().Bool("first", false, "With --query, use the first match; matches come newest first, so this is the same as --latest")
 				cmd.Flags().String("body-mode", string(mail.BodyModeReadable), "How to show the body: readable, text, html or raw")
 			},
 			run: h.readMessage,
@@ -110,7 +110,7 @@ func newMessagesModule(h *handlers) messagesModule {
 				cmd.Flags().String("thread-id", "", "Thread or conversation id from the provider, as in --json output")
 				cmd.Flags().String("query", "", "Search for the message; use with --latest or --first")
 				cmd.Flags().Bool("latest", false, "With --query, use the newest match")
-				cmd.Flags().Bool("first", false, "With --query, the same as --latest")
+				cmd.Flags().Bool("first", false, "With --query, use the first match; matches come newest first, so this is the same as --latest")
 			},
 			run: h.readThread,
 		},

@@ -19,7 +19,7 @@ maildo categories list --query "invoice" --latest --json
 ## Flags
 
 - `--account` Account to use (default: the active account)
-- `--first` With --query, the same as --latest
+- `--first` With --query, use the first match; matches come newest first, so this is the same as --latest
 - `--folder` With --query, search only this folder; without it, Sent, Drafts, Trash and Junk are left out (restore looks only in Trash and Junk)
 - `--id` Message id, or a short id from list or search
 - `--internet-id` Message-ID header of the message, such as <id@example.com>

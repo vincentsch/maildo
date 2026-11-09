@@ -90,7 +90,8 @@ MAILDO_IMAP_PASSWORD='the password' maildo login --email ann@example.com --no-pr
 
 maildo uses the same password for IMAP and SMTP. Add `--imap-host`,
 `--smtp-host` and `--ca-file` when the user gave you servers or a
-certificate file. Then:
+certificate file, and `--imap-port` and `--smtp-port` for ports other than
+993 and 465. `docs/providers/imap.md` has an example. Then:
 
 - Never echo or print the password, and never write it into a file, a
   script or a shell profile. Do not export it for later commands.
@@ -241,6 +242,14 @@ maildo draft send <draft_id> --dry-run --json       # show this to the user
 
 1. Run the send with `--dry-run --json`. Every way to send takes it,
    `reply --send` and `forward --send` included.
+
+   `reply` quotes the whole original message below the user's text, after
+   a line such as "On 2026-11-02 12:15 CET, Maria Klein
+   <maria@example.com> wrote:". The preview shows the quote as part of the
+   body. `--quote short` quotes only the start of the original, and
+   `--quote none` leaves the quote out. The language of the "On ... wrote:"
+   line follows the user's locale; `--quote-language en` or `de` sets it.
+   `--reply-all` also writes to everyone else on the message.
 2. Show the user the message from the preview:
    - the sender and Reply-To in `message.from` and `message.reply_to`
    - the recipients in `message.to`, `message.cc` and `message.bcc`

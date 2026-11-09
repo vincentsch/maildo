@@ -21,7 +21,7 @@ maildo thread --query "subject:contract" --first --account work --json
 
 - `--account` Account to use; repeat it for more than one (default: the active account)
 - `--all-accounts` Use all your accounts
-- `--first` With --query, the same as --latest
+- `--first` With --query, use the first match; matches come newest first, so this is the same as --latest
 - `--id` Message id, or a short id from list or search
 - `--internet-id` Message-ID header of the message, such as <id@example.com>
 - `--latest` With --query, use the newest match

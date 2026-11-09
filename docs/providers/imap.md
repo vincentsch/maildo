@@ -98,6 +98,32 @@ If the server's certificate comes from your own certificate authority, add
 `--ca-file /path/to/ca.pem`. maildo then trusts that authority for this
 account, in addition to the ones your system trusts.
 
+A server on other ports, with a company certificate authority, looks like
+this. IMAP runs on port 1993 and SMTP on port 1465, both with TLS from the
+start:
+
+```sh
+MAILDO_IMAP_PASSWORD='your-password' maildo login --email me@example.org \
+  --imap-host mail.example.org --imap-port 1993 \
+  --smtp-host mail.example.org --smtp-port 1465 \
+  --ca-file ./company-ca.pem
+```
+
+maildo picks STARTTLS by itself only on the ports that usually have it,
+such as 143 and 587. On any other port it uses TLS from the start. When your server wants STARTTLS there, add
+`--imap-tls starttls` or `--smtp-tls starttls`. For example, IMAP with
+STARTTLS on port 1143:
+
+```sh
+maildo login --email me@example.org \
+  --imap-host mail.example.org --imap-port 1143 --imap-tls starttls \
+  --smtp-host mail.example.org --smtp-port 1465 \
+  --ca-file ./company-ca.pem
+```
+
+maildo saves the full path to the CA file in its config, so leave the file
+where it is.
+
 `maildo doctor` shows what your server supports. Here is its output for the
 Dovecot server that maildo's tests use:
 
