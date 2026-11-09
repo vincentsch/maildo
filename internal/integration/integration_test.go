@@ -335,6 +335,7 @@ func runSuite(t *testing.T, srv server) {
 			{"has:attachment from:billing@vendor.example", []string{"Invoice 2026-104"}},
 			{"is:flagged", []string{"Site visit on Friday"}},
 			{"from:billing@vendor.example from:bob@builder.example", []string{"Invoice 2026-104", "Site visit on Friday"}},
+			{"from:billing@vendor.example OR from:bob@builder.example", []string{"Invoice 2026-104", "Site visit on Friday"}},
 			{"Grüße", []string{"Grüße aus München – Angebot für Straße 5 🚀"}},
 			{"payment after:2026-10-01 before:2026-10-02", []string{"Contract draft for October"}},
 		}
@@ -439,14 +440,20 @@ func runSuite(t *testing.T, srv server) {
 		c.ok(t, &list, "search", "subject:invoice from:billing@vendor.example")
 		var att struct {
 			Attachments []struct {
-				ID   string `json:"id"`
-				Name string `json:"name"`
-				Size int64  `json:"size"`
+				ID          string  `json:"id"`
+				Name        string  `json:"name"`
+				Size        int64   `json:"size"`
+				DecodedSize *uint64 `json:"decoded_size"`
 			} `json:"attachments"`
 		}
 		c.ok(t, &att, "attachments", "list", "--id", list.Messages[0].ID)
 		if len(att.Attachments) != 2 || att.Attachments[0].Name != "invoice-2026-104.pdf" || att.Attachments[0].Size < 2000 {
 			t.Fatalf("attachments = %+v", att.Attachments)
+		}
+		// IMAP knows only the encoded size, so the file size is an estimate
+		// and no decoded_size is listed.
+		if att.Attachments[0].DecodedSize != nil {
+			t.Fatalf("decoded_size = %d, but IMAP does not know it", *att.Attachments[0].DecodedSize)
 		}
 		dir := t.TempDir()
 		c.ok(t, nil, "attachments", "download", "--id", list.Messages[0].ID, "--all", "--to", dir)
@@ -509,7 +516,24 @@ func runSuite(t *testing.T, srv server) {
 		}
 		c.ok(t, nil, "flag", "clear", "--id", id)
 		c.ok(t, nil, "copy", "--id", id, "--to", "Clients")
-		c.ok(t, nil, "archive", "--id", id)
+		// The undo command of an archive puts the message back in INBOX.
+		var archived struct {
+			NewID        string   `json:"new_id"`
+			UndoCommands []string `json:"undo_commands"`
+		}
+		c.ok(t, &archived, "archive", "--id", id)
+		if archived.NewID == "" || archived.NewID == id || len(archived.UndoCommands) != 1 || !strings.Contains(archived.UndoCommands[0], "--to inbox --id "+archived.NewID) {
+			t.Fatalf("archive result = %+v", archived)
+		}
+		var back struct {
+			NewID string `json:"new_id"`
+		}
+		c.ok(t, &back, strings.Fields(archived.UndoCommands[0])[1:]...)
+		c.ok(t, &p, "search", "subject:\"Contract draft\"", "--folder", "INBOX")
+		if len(p.Messages) != 1 || p.Messages[0].ID != back.NewID {
+			t.Fatalf("after the undo, INBOX has %v", subjects(p.Messages))
+		}
+		c.ok(t, nil, "archive", "--id", back.NewID)
 		c.ok(t, &p, "search", "subject:\"Contract draft\"", "--folder", "Archive")
 		if len(p.Messages) != 1 {
 			t.Fatalf("archived copy not in Archive: %v", subjects(p.Messages))
@@ -665,6 +689,46 @@ func runSuite(t *testing.T, srv server) {
 		got := waitForMessage(t, srv, caFile, fwd, "Forwarding the invoice.")
 		if !strings.Contains(got, "invoice-2026-104.pdf") || !strings.Contains(got, "Subject: Fwd: Invoice 2026-104") {
 			t.Fatalf("forwarded message:\n%s", got)
+		}
+	})
+
+	// The dogfood case: reply to the latest mail of a conversation that
+	// already has your own reply in Sent. The preview shows the thread
+	// headers, and thread finds the new reply too.
+	t.Run("a sent reply joins its thread", func(t *testing.T) {
+		var preview struct {
+			Message struct {
+				CC          []any    `json:"cc"`
+				BCC         []any    `json:"bcc"`
+				ReplyTo     []any    `json:"reply_to"`
+				Attachments []any    `json:"attachments"`
+				InReplyTo   string   `json:"in_reply_to"`
+				References  []string `json:"references"`
+			} `json:"message"`
+		}
+		args := []string{"reply", "--internet-id", seed.lastReplyID, "--body", "See you on Tuesday.", "--send"}
+		c.ok(t, &preview, append(args, "--dry-run")...)
+		m := preview.Message
+		if m.CC == nil || m.BCC == nil || m.ReplyTo == nil || m.Attachments == nil || m.InReplyTo != seed.lastReplyID ||
+			strings.Join(m.References, " ") != "<kickoff@client.test> <reply1@example.test> "+seed.lastReplyID {
+			t.Fatalf("reply preview = %+v", m)
+		}
+		c.approved(t, args...)
+		var thread struct {
+			Thread struct {
+				Messages []row `json:"messages"`
+			} `json:"thread"`
+		}
+		c.ok(t, &thread, "thread", "--internet-id", seed.kickoffID)
+		found := map[string]bool{}
+		for _, m := range thread.Thread.Messages {
+			found[m.InternetMessageID] = true
+			if m.Folder.Path == "Sent" && strings.Contains(m.Preview, "See you on Tuesday") {
+				found["new reply"] = true
+			}
+		}
+		if !found[seed.kickoffID] || !found["<reply1@example.test>"] || !found[seed.lastReplyID] || !found["new reply"] {
+			t.Fatalf("thread = %v", subjects(thread.Thread.Messages))
 		}
 	})
 
