@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 - 2026-11-09
 
 This is the first public release of maildo. It runs on Linux and macOS.
 Windows is not supported yet, but you can use maildo inside WSL.
