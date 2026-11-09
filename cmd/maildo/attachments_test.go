@@ -408,12 +408,11 @@ func TestMessageAttachmentsJSONPreservesSizeFacts(t *testing.T) {
 	if len(listRows) != 2 {
 		t.Fatalf("list rows = %#v", listRows)
 	}
-	assertJSONField(t, listRows[0], "encoded_size", float64(0))
-	assertJSONField(t, listRows[0], "encoded_size_known", false)
+	if _, ok := listRows[0].(map[string]any)["encoded_size"]; ok {
+		t.Fatalf("an unknown encoded size is listed: %#v", listRows[0])
+	}
 	assertJSONField(t, listRows[0], "decoded_size", float64(0))
-	assertJSONField(t, listRows[0], "decoded_size_known", true)
 	assertJSONField(t, listRows[1], "encoded_size", float64(4))
-	assertJSONField(t, listRows[1], "encoded_size_known", true)
 	assertGmailAttachmentJSONMetadata(t, listRows[1])
 
 	outDir := filepath.Join(t.TempDir(), "downloads")
@@ -424,9 +423,7 @@ func TestMessageAttachmentsJSONPreservesSizeFacts(t *testing.T) {
 		t.Fatalf("download rows = %#v", downloadRows)
 	}
 	assertJSONField(t, downloadRows[0], "encoded_size", float64(4))
-	assertJSONField(t, downloadRows[0], "encoded_size_known", true)
 	assertJSONField(t, downloadRows[0], "decoded_size", float64(3))
-	assertJSONField(t, downloadRows[0], "decoded_size_known", true)
 	assertGmailAttachmentJSONMetadata(t, downloadRows[0])
 }
 

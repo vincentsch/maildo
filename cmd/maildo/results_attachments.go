@@ -88,21 +88,22 @@ type messageAttachmentDownloadResult struct {
 // With --all, attachments that are not files are listed too, with the reason
 // they were left out.
 type attachmentDownloadRow struct {
-	ID               string                           `json:"id"`
-	Name             string                           `json:"name,omitempty"`
-	ContentType      string                           `json:"content_type,omitempty"`
-	Size             int64                            `json:"size,omitempty"`
-	IsInline         bool                             `json:"is_inline"`
-	Kind             mail.AttachmentKind              `json:"kind,omitempty"`
-	ProviderMeta     *mail.AttachmentProviderMetadata `json:"provider_metadata,omitempty"`
-	EncodedSize      *uint64                          `json:"encoded_size,omitempty"`
-	EncodedSizeKnown *bool                            `json:"encoded_size_known,omitempty"`
-	DecodedSize      *uint64                          `json:"decoded_size,omitempty"`
-	DecodedSizeKnown *bool                            `json:"decoded_size_known,omitempty"`
-	SafeBasename     string                           `json:"safe_basename,omitempty"`
-	LocalPath        string                           `json:"local_path,omitempty"`
+	ID           string                           `json:"id"`
+	Name         string                           `json:"name,omitempty"`
+	ContentType  string                           `json:"content_type,omitempty"`
+	Size         int64                            `json:"size,omitempty"`
+	IsInline     bool                             `json:"is_inline"`
+	Kind         mail.AttachmentKind              `json:"kind,omitempty"`
+	ProviderMeta *mail.AttachmentProviderMetadata `json:"provider_metadata,omitempty"`
+	// EncodedSize and DecodedSize are there only when the provider knows
+	// them for sure.
+	EncodedSize  *uint64 `json:"encoded_size,omitempty"`
+	DecodedSize  *uint64 `json:"decoded_size,omitempty"`
+	SafeBasename string  `json:"safe_basename,omitempty"`
+	LocalPath    string  `json:"local_path,omitempty"`
 	// SavedSize is the size of the saved file. Size is what the server
-	// said before the download, which can differ a little.
+	// said before the download. Without DecodedSize it is an estimate and
+	// can differ a little.
 	SavedSize int64  `json:"saved_size,omitempty"`
 	Status    string `json:"status"`
 	Reason    string `json:"reason,omitempty"`

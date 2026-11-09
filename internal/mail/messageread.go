@@ -100,19 +100,17 @@ type Attachment struct {
 
 func (a Attachment) MarshalJSON() ([]byte, error) {
 	type attachmentJSON struct {
-		ID               string                      `json:"id"`
-		Name             string                      `json:"name,omitempty"`
-		ContentType      string                      `json:"content_type,omitempty"`
-		Size             int64                       `json:"size,omitempty"`
-		IsInline         bool                        `json:"is_inline"`
-		ContentID        string                      `json:"content_id,omitempty"`
-		Kind             AttachmentKind              `json:"kind,omitempty"`
-		ProviderType     string                      `json:"provider_type,omitempty"`
-		ProviderMeta     *AttachmentProviderMetadata `json:"provider_metadata,omitempty"`
-		EncodedSize      *uint64                     `json:"encoded_size,omitempty"`
-		EncodedSizeKnown *bool                       `json:"encoded_size_known,omitempty"`
-		DecodedSize      *uint64                     `json:"decoded_size,omitempty"`
-		DecodedSizeKnown *bool                       `json:"decoded_size_known,omitempty"`
+		ID           string                      `json:"id"`
+		Name         string                      `json:"name,omitempty"`
+		ContentType  string                      `json:"content_type,omitempty"`
+		Size         int64                       `json:"size,omitempty"`
+		IsInline     bool                        `json:"is_inline"`
+		ContentID    string                      `json:"content_id,omitempty"`
+		Kind         AttachmentKind              `json:"kind,omitempty"`
+		ProviderType string                      `json:"provider_type,omitempty"`
+		ProviderMeta *AttachmentProviderMetadata `json:"provider_metadata,omitempty"`
+		EncodedSize  *uint64                     `json:"encoded_size,omitempty"`
+		DecodedSize  *uint64                     `json:"decoded_size,omitempty"`
 	}
 	out := attachmentJSON{
 		ID:           a.ID,
@@ -125,15 +123,25 @@ func (a Attachment) MarshalJSON() ([]byte, error) {
 		ProviderType: a.ProviderType,
 		ProviderMeta: a.ProviderMeta,
 	}
-	if a.SizeFactsPresent {
-		encodedKnown := a.SizeFacts.EncodedSizeKnown
-		decodedKnown := a.SizeFacts.DecodedSizeKnown
-		out.EncodedSize = &a.SizeFacts.EncodedSize
-		out.EncodedSizeKnown = &encodedKnown
-		out.DecodedSize = &a.SizeFacts.DecodedSize
-		out.DecodedSizeKnown = &decodedKnown
-	}
+	out.EncodedSize, out.DecodedSize = a.KnownSizes()
 	return json.Marshal(out)
+}
+
+// KnownSizes are the encoded and decoded sizes when the provider knows
+// them for sure, for JSON. An estimate is left out; Size has it.
+func (a Attachment) KnownSizes() (encoded, decoded *uint64) {
+	if !a.SizeFactsPresent {
+		return nil, nil
+	}
+	if a.SizeFacts.EncodedSizeKnown {
+		v := a.SizeFacts.EncodedSize
+		encoded = &v
+	}
+	if a.SizeFacts.DecodedSizeKnown {
+		v := a.SizeFacts.DecodedSize
+		decoded = &v
+	}
+	return encoded, decoded
 }
 
 const (

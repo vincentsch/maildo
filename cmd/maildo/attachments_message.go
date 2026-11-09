@@ -493,16 +493,7 @@ func rowForAttachment(a mail.Attachment, status string) attachmentDownloadRow {
 		ProviderMeta: cloneProviderMetadataForResult(a.ProviderMeta),
 		Status:       status,
 	}
-	if a.SizeFactsPresent {
-		encodedSize := a.SizeFacts.EncodedSize
-		encodedKnown := a.SizeFacts.EncodedSizeKnown
-		decodedSize := a.SizeFacts.DecodedSize
-		decodedKnown := a.SizeFacts.DecodedSizeKnown
-		row.EncodedSize = &encodedSize
-		row.EncodedSizeKnown = &encodedKnown
-		row.DecodedSize = &decodedSize
-		row.DecodedSizeKnown = &decodedKnown
-	}
+	row.EncodedSize, row.DecodedSize = a.KnownSizes()
 	return row
 }
 
