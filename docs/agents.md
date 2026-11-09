@@ -147,3 +147,25 @@ The same rules help with any automation:
 | 4 | the account's policy or the provider does not allow it |
 | 5 | message, folder or draft not found |
 | 6 | the provider limits requests; wait and try again |
+
+### Where the JSON keeps things
+
+| Command | What to read |
+| --- | --- |
+| `list`, `search` | `.messages`, plus `has_more` and `total` |
+| `read` | `.message`, with the text in `.message.body.content` |
+| `thread` | `.thread.messages`, oldest first, your replies in Sent included |
+| `attachments list` | `.attachments` |
+| a change to one message | `.message_id`, `.new_id` and `.undo_commands` |
+| a change to several messages | `.counts`, `.targets` and `.undo_commands` |
+| a send preview (`--dry-run`) | `.message`, `.approval_code` and `.send_command` |
+
+Messages have two dates. `received_at` is when the message arrived in the
+mailbox, and `sent_at` is the date in the message itself. Lists, threads
+and the previews of changes use the same two names.
+
+A change to several messages counts them in `counts`, with `total`,
+`succeeded`, `failed` and `skipped`. Each row in `targets` has the old `id`,
+the `new_id` after the change and a `status`. On IMAP and Outlook a message
+that moves to another folder gets a new id. On Gmail the id stays the same,
+and `new_id` repeats it.

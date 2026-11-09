@@ -35,6 +35,10 @@ In a script, give the password in `MAILDO_IMAP_PASSWORD`:
 MAILDO_IMAP_PASSWORD='app-password' maildo login --email me@example.com --name work
 ```
 
+maildo uses this one password for IMAP and for SMTP, and logs in to both
+with the same username. There is no separate SMTP password. A server that
+wants a different password for sending does not work with maildo yet.
+
 To give the servers yourself, use `--imap-host` and `--smtp-host`. The ports
 are 993 for IMAP and 465 for SMTP unless you set them. On 993 and 465,
 maildo uses TLS from the start, and on 143 and 587 it uses STARTTLS.

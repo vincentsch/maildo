@@ -102,6 +102,13 @@ Without `--send`, `reply` and `forward` only save a draft.
 - the sender and every recipient, Bcc included
 - the subject and the body
 - each attachment with its size, inline images included
+- for a reply, the Message-ID it answers, which keeps it in the
+  conversation
+
+Empty fields still get a line with "(none)", so you see that a message has
+no Cc or no attachments. In JSON they are empty lists. When the From line has
+only your address, the preview says how to add your name with
+`maildo config set sender_name`.
 
 In the terminal, a body longer than 40 lines is cut, and the preview says
 how many lines it left out. `--full` shows all of it. With `--json`, the
@@ -116,7 +123,11 @@ Would send this message from work:
 
   From:     Me <me@work.example>
   To:       Clara Client <clara@client.example>
+  Cc:       (none)
+  Bcc:      (none)
+  Reply-To: (none)
   Subject:  Quote for October
+  Attached: (none)
 
   Hi Clara,
 
@@ -127,8 +138,8 @@ To send it, run:
   maildo send --to 'Clara Client <clara@client.example>' --subject 'Quote for October' --body-file quote.txt --account work --approve k7q2m9xd --yes
 ```
 
-The code is a short hash of everything in the preview, and of the account
-that sends. When you run the printed command, maildo works out the code
+The code is a short hash of everything in the preview, the reply headers
+included, and of the account that sends. When you run the printed command, maildo works out the code
 again. If anything changed in between, for example someone edited the
 draft, the code no longer matches. Then maildo refuses with `approval_mismatch`,
 and nothing is sent.

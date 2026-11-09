@@ -113,8 +113,8 @@ Nothing was changed. To archive these messages, run:
 ```
 
 That command changes exactly the messages in the preview. It does not search
-again, so mail that arrives in between is left alone. maildo writes every
-change to a local action log.
+again, so mail that arrives in between is left alone. When a change moves
+mail to another folder, maildo also prints the command that moves it back. maildo writes every change to a local action log.
 
 ## Write and send
 
@@ -137,7 +137,12 @@ Would send this message from work:
 
   From:     Me <me@work.example>
   To:       Clara Client <clara@client.example>
+  Cc:       (none)
+  Bcc:      (none)
+  Reply-To: (none)
   Subject:  Re: Contract draft for October
+  Thread:   replies to <contract@client.example>
+  Attached: (none)
 
   Thanks, I will read the notes today.
 

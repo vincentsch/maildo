@@ -35,8 +35,11 @@ Windows is not supported yet, but you can use maildo inside WSL.
   operators `from:`, `to:`, `cc:`, `subject:`, `has:attachment`,
   `is:unread` and `is:flagged`, and dates and ages such as `newer:7d`.
   Trash and Junk are left out on every provider unless you ask for them.
-  `OR`, `AND`, `NOT` and `-word` are refused with a hint, so they are never
-  searched as words by mistake.
+  A repeated operator matches any of its values, and `OR` between two
+  values of the same operator means the same, as in
+  `from:anna OR from:ben`. Other uses of `OR`, and `AND`, `NOT` and
+  `-word`, are refused with a hint, so they are never searched as words by
+  mistake.
 - Gmail search fetches only the page it shows. Outlook word searches that
   reach Outlook's limit of 1,000 results show a warning.
 - `read`, `thread` and attachment download. For broken mail, maildo shows
@@ -61,6 +64,10 @@ Windows is not supported yet, but you can use maildo inside WSL.
   that account, never a new search. For many messages, that command reads
   their ids from a file, and refuses the file if it changed after the
   preview.
+- When a change moves mail to another folder, as `archive` and `delete`
+  do, maildo prints the command that moves the messages back to the
+  folders they came from. The JSON has
+  it in `undo_commands`, and the ids after the change in `new_id`.
 - Create, rename and delete folders (on Gmail, labels). In this beta,
   `folders delete` deletes only empty folders without subfolders.
 - `maildo attachments add` and `attachments remove` change the files of a
@@ -79,7 +86,9 @@ Windows is not supported yet, but you can use maildo inside WSL.
   `--include-attachments none`. For IMAP accounts, maildo saves a copy in
   Sent, and only that copy has the Bcc header.
 - With `--dry-run`, a send shows the whole message, with every attachment
-  and inline image. `--full` shows long bodies in full, and JSON always has
+  and inline image. Empty fields such as Cc show "(none)", and are empty
+  lists in JSON. A reply shows the Message-ID it answers. When From has no
+  name, the preview says how to add one. `--full` shows long bodies in full, and JSON always has
   the whole body. The preview prints an approval code and the command that
   sends exactly that message. In a terminal maildo asks before it sends.
   Without a terminal, a send needs `--approve` with the code and `--yes`.

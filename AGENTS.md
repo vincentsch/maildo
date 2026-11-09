@@ -50,7 +50,8 @@ not edit shell profiles unless the user asks.
 
 The password belongs to the user. Never ask them to paste it into the chat.
 Never take it from other projects or password managers, and never write it
-into a file.
+into a file. If the user has already given you the password in the chat,
+read "When the user gives you the password" below.
 
 1. Ask which address to use.
 2. Ask the user to open their own terminal and run:
@@ -77,10 +78,33 @@ into a file.
    When a check fails, `doctor` exits with status 1 and says which check it
    was.
 
+### When the user gives you the password
+
+Sometimes the user puts the password in the chat and asks you to log in.
+Then you may log in with it, once. This works for IMAP and Fastmail
+accounts. Put the password in `MAILDO_IMAP_PASSWORD` for that one command:
+
+```sh
+MAILDO_IMAP_PASSWORD='the password' maildo login --email ann@example.com --no-prompt --json
+```
+
+maildo uses the same password for IMAP and SMTP. Add `--imap-host`,
+`--smtp-host` and `--ca-file` when the user gave you servers or a
+certificate file. Then:
+
+- Never echo or print the password, and never write it into a file, a
+  script or a shell profile. Do not export it for later commands.
+- maildo saves the login in its config folder, so later commands need no
+  password. Tell the user that maildo now keeps their password.
+- Check the login with `maildo doctor --json`, as in step 4 above.
+
 ## 3. Agree on limits before you touch mail
 
 Ask the user what you may do, and set that as the account's policy. maildo
-checks the policy for every command, including yours. A good start:
+checks the policy for every command, including yours. When the user has
+already said what you may do in this task, you can go ahead without a
+policy. Still suggest one when you are done, because it protects the next
+session too. A good start:
 
 ```sh
 maildo config set policy.drafts_only true --account <name>
@@ -121,8 +145,9 @@ Use `--json` and parse the result. Text output is for people.
 maildo list --json --limit 20               # newest mail in the inbox
 maildo list Archive --unread --json
 maildo search "from:anna invoice newer:30d" --json
+maildo search "from:anna@example.com OR from:ben@example.com" --json
 maildo read <id> --json                      # body in .message.body.content
-maildo thread <id> --json
+maildo thread <id> --json                    # messages in .thread.messages
 maildo attachments list <id> --json
 maildo attachments download <id> --all --to <folder> --json
 ```
@@ -134,8 +159,19 @@ maildo attachments download <id> --all --to <folder> --json
   `--limit`. `has_more` says whether `--page 2` has more.
 - Each row has a `preview` with the start of the message. Use it to sort out
   which messages matter before you read whole messages.
+- Dates are in `received_at` (when the message arrived) and `sent_at` (the
+  date the sender's program wrote). Previews of changes use the same names.
 - The search syntax is in `docs/search.md`. Trash and Junk are left out
-  unless you pass `--folder`.
+  unless you pass `--folder`. To match one of several senders, repeat the
+  operator or put `OR` between them, as in
+  `from:anna@example.com OR from:ben@example.com`. `OR` works only between
+  values of the same operator.
+- `thread` lists the whole conversation, oldest first, in `.thread.messages`.
+  That includes your own replies in Sent. The messages look like rows from
+  `list`.
+- In `attachments list`, `size` is the size of the file. When
+  `decoded_size` is missing, `size` is an estimate, and `saved_size` after
+  the download can differ by a few bytes. The file is still complete.
 - Reading never marks a message as read.
 
 ## 5. Change mail
@@ -164,8 +200,23 @@ again, so mail that arrived after the preview is not touched.
 
 When a command that changes mail uses `--query`, it leaves out Sent, Drafts,
 Trash and Junk unless you name a folder with `--folder`. `restore` looks in
-Trash and Junk. Message ids change when mail moves to another folder, so
-take the new ids from the result.
+Trash and Junk.
+
+What a change returns:
+
+- For one message: `applied`, the old id in `message_id` and the id it has
+  now in `new_id`.
+- For several messages: `applied`, the numbers in `counts` (`total`,
+  `succeeded`, `failed` and `skipped`) and one row per message in
+  `targets`. Each row has the old `id`, the `new_id` and a `status`.
+- After a change that moves mail to another folder, such as `archive` or
+  `delete`: `undo_commands`, the commands that move the messages back to
+  the folders they came from.
+  Show them to the user. Run one only when the user asks you to undo the
+  change.
+
+Message ids change when mail moves to another folder on IMAP and Outlook,
+so use `new_id` from then on.
 
 If a short id matches two messages, maildo refuses it and shows both
 candidates with longer ids to pick from. An old short id that maildo no
@@ -191,6 +242,13 @@ maildo draft send <draft_id> --dry-run --json       # show this to the user
    - the subject and the whole body (`message.body`)
    - the attachments in `message.attachments`, inline ones included, and
      for a forward the ones left out in `message.attachments_left_out`
+   - for a reply, `message.in_reply_to` and `message.references`. They hold
+     the Message-IDs that keep the reply in the conversation.
+
+   The lists are always there, as `[]` when they are empty. When
+   `message.from` has no `name`, the mail goes out with only the address.
+   Tell the user, who can add a name with
+   `maildo config set sender_name "Their Name" --account <name>`.
 
    In text output, a body longer than 40 lines is cut. Use `--full` or the
    JSON. If the preview has `sent_before`, maildo already sent this exact
@@ -261,7 +319,9 @@ says the log could not be written, tell the user.
   --to ~/Downloads`.
 - Clean out newsletters older than a week: run `archive --query
   "from:news@... older:7d" --all --json`, show the preview, and apply it
-  after the user agrees.
+  after the user agrees. For two senders, use
+  `"from:news@a.example OR from:deals@b.example older:7d"`.
+- Undo that: run the command in `undo_commands` from the result.
 - Draft replies to the three newest client mails: run `search
   "from:client.example is:unread" --json --limit 3` and read each message.
   Then run `reply <id> --body-file ...` for each one, and list the drafts

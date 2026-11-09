@@ -102,6 +102,16 @@ maildo move 9b1c3e2 --to Clients
 
 Moving a message to another folder gives it a new id on IMAP and Outlook.
 maildo prints it ("Its id is now ..."). Use that id in the next command.
+When a change moves a message to another folder, maildo also prints the
+command that moves it back:
+
+```text
+$ maildo archive ad5d4c9
+Archived "Frontend Weekly #412" from Frontend Weekly.
+Its id is now 8425f19.
+To move it back to INBOX, run:
+  maildo move --account work --to inbox --id imap-message/v1/QXJjaGl2ZQ/1794220072/1
+```
 
 To change every message a search finds, add `--all`. maildo then shows what
 it would change and prints the command that does it:

@@ -46,7 +46,7 @@ maildo list --json --limit 20                  # newest in the inbox; add a fold
 maildo list --unread --json
 maildo search "from:anna invoice newer:30d" --json
 maildo read <id> --json                        # .message.body.content
-maildo thread <id> --json
+maildo thread <id> --json                      # .thread.messages, oldest first
 maildo attachments list <id> --json
 maildo attachments download <id> --all --to <folder> --json
 ```
@@ -54,9 +54,11 @@ maildo attachments download <id> --all --to <folder> --json
 Search operators: `from:` `to:` `cc:` `subject:` `has:attachment`
 `is:unread` `is:read` `is:flagged` `after:YYYY-MM-DD` `before:YYYY-MM-DD`
 `newer:7d` `older:2w`, plus plain words and "quoted phrases". If you repeat
-an operator, it matches any of its values. There is no `OR`, `AND` or `NOT`,
-and maildo refuses `-word`. Trash and Junk are searched only when you name
-them with `--folder`, for example `--folder Trash`.
+an operator, it matches any of its values, and `OR` between two values of
+the same operator means the same: `from:a@x.example OR from:b@y.example`.
+Any other `OR` is refused, and so are `AND`, `NOT` and `-word`. Trash and
+Junk are searched only when you name them with `--folder`, for example
+`--folder Trash`.
 
 Each row has a `preview` of the message. Use it to sort out which messages
 matter before you read whole messages. `has_more` and `--page N` page
@@ -87,7 +89,10 @@ the preview, or an ids file when there are many, so mail that arrives later
 is not touched. When a command that changes mail uses `--query`, it leaves
 out Sent, Drafts, Trash and Junk unless `--folder` names one. `restore`
 looks in Trash and Junk. Message ids change when mail moves to another
-folder, so use the ids from the result.
+folder, so use `new_id` from the result. A change to several messages has
+`counts` and one row per message in `targets`. When a change moves mail to
+another folder, `undo_commands` move the messages back. Run one only
+when the user asks you to undo the change.
 
 ## Writing
 
@@ -100,6 +105,13 @@ maildo draft read <draft_id> --json
 maildo draft send <draft_id> --dry-run --json              # show this, then ask
 maildo send --to ann@example.com --subject "..." --body "..." --dry-run --json
 ```
+
+In a send preview, the recipient lists and `message.attachments` are
+always there, as `[]` when they are empty. A reply also has
+`message.in_reply_to` and `message.references`, which keep it in the
+conversation. When `message.from` has no `name`, tell the user that the
+mail goes out with only the address; `maildo config set sender_name` adds
+one.
 
 Every send preview has an `approval_code` and a `send_command`. After the
 user said yes to the preview you showed, run its `send_command` exactly as

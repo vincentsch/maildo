@@ -50,15 +50,20 @@ When you use different operators and words, all of them must match:
 from:anna has:attachment newer:30d
 ```
 
-When you repeat an operator, it matches any of its values:
+When you repeat an operator, it matches any of its values. You can also
+put `OR` between the values, which means the same:
 
 ```text
-from:anna@example.com from:ben@example.com     mail from either of them
+from:anna@example.com from:ben@example.com       mail from either of them
+from:anna@example.com OR from:ben@example.com    the same search
+subject:invoice OR subject:receipt newer:30d     either word in the subject, in the last 30 days
 ```
 
-There is no `OR` keyword. If you write `OR`, maildo stops with an error
-instead of searching for the word "OR". To search for the word, quote it
-(`"OR"`).
+This works for `from:`, `to:`, `cc:` and `subject:`. `OR` works only
+between two values of the same operator. maildo cannot match one operator
+or another, so `from:anna OR subject:invoice` and `invoice OR receipt` stop
+with an error instead of searching for the word "OR". Run one search for
+each part instead. To search for the word, quote it (`"OR"`).
 
 There is no way to exclude something yet. `NOT invoice` and `-invoice`
 would turn into a search for those words, so maildo refuses them. It also

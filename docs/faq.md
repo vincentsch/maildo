@@ -48,12 +48,26 @@ then on, because the old one no longer works.
 Most changes have an opposite command:
 
 - `mark unread` undoes `mark read`, and `flag clear` undoes `flag set`.
-- `restore` undoes `delete` and `junk`.
-- For `move` and `archive`, move the message back.
+- When a change moves mail to another folder, as `archive` and `delete`
+  do, maildo prints the command that moves the messages back to the
+  folders they came from. With `--json`
+  it is in `undo_commands`.
+- `restore` also takes mail back from Trash or Junk, to the inbox or to the
+  folder you name with `--to`.
 
 `delete` moves mail to Trash. maildo removes a message for good only when it
 replaces a draft with a new version or sends a draft. A sent message cannot
 be taken back, which is why maildo asks before it sends.
+
+### Why do the attachment sizes not match?
+
+`attachments list` shows `size`, the size of the file. IMAP servers say
+only how big the attachment is inside the message, where it is stored as
+text (`encoded_size`). maildo works out the file size from that, so on IMAP
+`size` is an estimate, and the text output says "about". When the provider
+knows the exact file size, the JSON also has `decoded_size`. After a
+download, `saved_size` is the size of the file on disk. It can differ from
+an estimated `size` by a few bytes, and the file is still complete.
 
 ### Why does maildo refuse to delete a folder?
 
