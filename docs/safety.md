@@ -226,7 +226,7 @@ How each provider does it:
 - Gmail: maildo calls Gmail's drafts.delete, which removes the draft for
   good, as Discard draft does in Gmail.
 - Outlook: maildo deletes the draft through Microsoft Graph, the same call
-  it makes after it sends a draft. It does not go to Deleted Items.
+  it makes after it sends a draft.
 
 ### Attachments on Outlook
 

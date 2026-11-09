@@ -131,7 +131,7 @@ func (c *Client) UpdateDraft(ctx context.Context, req mail.UpdateDraftRequest) (
 }
 
 // DeleteDraft discards a draft with Graph's DELETE, the same call maildo
-// makes after it sends a draft. The draft does not go to Deleted Items.
+// makes after it sends a draft.
 func (c *Client) DeleteDraft(ctx context.Context, req mail.DeleteDraftRequest) (mail.DraftRef, error) {
 	if _, err := c.getDraftByID(ctx, req.DraftID, "isDraft", ""); err != nil {
 		return mail.DraftRef{}, err
