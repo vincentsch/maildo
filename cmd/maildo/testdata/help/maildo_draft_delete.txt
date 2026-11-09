@@ -1,0 +1,46 @@
+Discard a draft for good
+
+This works like the discard button of a mail program. The draft is removed
+from Drafts and does not go to Trash. The id must name a draft, so this
+cannot delete other mail. To move a message to Trash, use maildo delete.
+
+Run it with --dry-run first. The preview shows the draft and prints the
+command that discards it, with --confirm and the draft's id.
+
+Related commands:
+  draft read
+  delete
+
+Output:
+  Shows text you can read in your terminal.
+  Use --json to get JSON for scripts and other programs.
+  Use --jq to filter the JSON output with a jq expression.
+  Use --template to format the output with a Go template.
+
+Usage:
+  maildo draft delete [id] [flags]
+
+Examples:
+maildo draft delete 3c1f2a7 --dry-run
+maildo draft delete 3c1f2a7 --confirm 3c1f2a7
+maildo draft delete --id 3c1f2a7 --account work --dry-run --json
+
+Flags:
+      --account stringArray   Account to use (default: the active account)
+      --confirm string        The draft's id again, to confirm; --dry-run prints the command
+      --full                  Show the whole body in the preview, also when it is long
+  -h, --help                  help for delete
+      --id string             Draft id, or the short id maildo printed
+
+Global Flags:
+      --config string     Path to the config file
+      --dry-run           Preview changes without performing them
+      --include-meta      Wrap the JSON output as {data, meta} with request details
+      --jq string         Filter the JSON output with a jq expression
+      --json              Output stable JSON instead of the human view
+      --no-ansi           Disable all ANSI/control sequences in human output
+      --no-color          Disable color in human output
+      --no-pager          Never use a pager for long human output
+      --no-prompt         Never block on an interactive prompt
+      --quiet             Suppress non-essential output
+      --template string   Format the JSON output with a Go text/template

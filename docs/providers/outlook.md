@@ -149,7 +149,9 @@ drafts. Send bigger files from Outlook itself.
 Outlook writes replies and forwards itself. To show you the real recipients
 and the quoted text before anything is sent, `reply --send --dry-run` and
 `forward --send --dry-run` save the message as a draft first. The preview
-prints the `maildo draft send` command for that draft.
+prints the `maildo draft send` command for that draft, and the
+`maildo draft delete` command that discards it if you do not want to send
+it.
 
 Search uses Microsoft's own search, so it works like the search box in
 Outlook.

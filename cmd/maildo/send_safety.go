@@ -331,7 +331,7 @@ func writeComposePreview(f *rungrad.Factory, cmd *cobra.Command, acct provider.R
 			fmt.Fprintln(w, "The command reads the body from stdin, so pipe in the same text again.")
 		}
 		if p.DraftSaved {
-			fmt.Fprintf(w, "If you do not want to send it, delete the draft with: maildo delete --account %s --id %s\n", shellQuote(acct.Name), shellQuote(p.Message.DraftID))
+			fmt.Fprintf(w, "If you do not want to send it, discard the draft with: maildo draft delete --account %s --id %s --confirm %s\n", shellQuote(acct.Name), shellQuote(p.Message.DraftID), shellQuote(p.Message.DraftID))
 		}
 	})
 }

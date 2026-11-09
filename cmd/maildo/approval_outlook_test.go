@@ -180,7 +180,7 @@ func TestOutlookReplyPreviewShowsTheRealRecipients(t *testing.T) {
 		t.Fatalf("sendMail body = %s", body)
 	}
 	human := h.runNoBrowser("reply", "read-id", "--body", "test", "--quote", "none", "--send", "--dry-run")
-	for _, want := range []string{"Outlook writes replies and forwards itself, so maildo saved this one as a draft", "To:       Source Sender <source@example.test>", "maildo draft send ", "If you do not want to send it, delete the draft with: maildo delete --account work --id reply-read-id"} {
+	for _, want := range []string{"Outlook writes replies and forwards itself, so maildo saved this one as a draft", "To:       Source Sender <source@example.test>", "maildo draft send ", "If you do not want to send it, discard the draft with: maildo draft delete --account work --id reply-read-id --confirm reply-read-id"} {
 		if !strings.Contains(human.Stdout, want) {
 			t.Fatalf("human preview lacks %q:\n%s", want, human.Stdout)
 		}

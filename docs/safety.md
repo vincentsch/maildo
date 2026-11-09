@@ -206,8 +206,27 @@ the quoted text when it saves the message. So on Outlook,
 `reply --send --dry-run` and `forward --send --dry-run` save the message as
 a draft and show you that draft. The command they print is a
 `maildo draft send` for it. This is the only preview that writes something:
-a draft in your Drafts folder. If you do not send it, delete it with the
-command the preview prints.
+a draft in your Drafts folder. If you do not send it, discard it with the
+`maildo draft delete` command the preview prints.
+
+### Discarding drafts
+
+`maildo draft delete` discards a draft the way a mail program does. The
+draft is removed for good and does not go to Trash. It needs `--confirm`
+with the draft's id, and `--dry-run` shows the draft and prints the whole
+command. It takes only drafts. An id of any other message is refused, so
+nothing else can be deleted this way. Under `policy.drafts_only` it is
+allowed, because it changes only drafts. `policy.read_only` refuses it.
+
+How each provider does it:
+
+- IMAP: the draft gets the `\Deleted` flag and is expunged, as when maildo
+  replaces a draft you changed. A server without UIDPLUS can only mark it as
+  deleted, and maildo says so.
+- Gmail: maildo calls Gmail's drafts.delete, which removes the draft for
+  good, as Discard draft does in Gmail.
+- Outlook: maildo deletes the draft through Microsoft Graph, the same call
+  it makes after it sends a draft. It does not go to Deleted Items.
 
 ### Attachments on Outlook
 

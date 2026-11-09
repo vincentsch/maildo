@@ -22,6 +22,7 @@ const (
 var accessKinds = map[ClientAccessKind]accessKind{
 	ClientAccessDraftCreate:                              accessDraft,
 	ClientAccessDraftUpdate:                              accessDraft,
+	ClientAccessDraftDelete:                              accessDraft,
 	ClientAccessDraftAttachmentsMutate:                   accessDraft,
 	ClientAccessReplyDraftCreate:                         accessDraft,
 	ClientAccessForwardDraftCreate:                       accessDraft,

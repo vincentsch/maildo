@@ -692,6 +692,37 @@ func runSuite(t *testing.T, srv server) {
 		}
 	})
 
+	// A discarded draft is gone for good: not in Drafts, and not in Trash.
+	t.Run("draft delete discards for good", func(t *testing.T) {
+		var created struct {
+			DraftID string `json:"draft_id"`
+		}
+		c.ok(t, &created, "draft", "create", "--to", "jonas@example.test", "--subject", "Discard me", "--body", "Not needed.")
+		var preview struct {
+			Draft struct {
+				Subject string `json:"subject"`
+			} `json:"draft"`
+			ApplyCommand string `json:"apply_command"`
+		}
+		c.ok(t, &preview, "draft", "delete", created.DraftID, "--dry-run")
+		if preview.Draft.Subject != "Discard me" || !strings.Contains(preview.ApplyCommand, "--confirm "+created.DraftID) {
+			t.Fatalf("preview = %+v", preview)
+		}
+		c.ok(t, nil, "draft", "delete", created.DraftID, "--confirm", created.DraftID)
+		var drafts page
+		c.ok(t, &drafts, "list", "Drafts")
+		if containsSubject(drafts.Messages, "Discard me") {
+			t.Fatalf("Drafts after the delete: %v", subjects(drafts.Messages))
+		}
+		var trash page
+		if res := c.run(t, "list", "Trash", "--json"); res.exit == 0 {
+			_ = json.Unmarshal([]byte(res.stdout), &trash)
+		}
+		if containsSubject(trash.Messages, "Discard me") {
+			t.Fatalf("the discarded draft is in Trash: %v", subjects(trash.Messages))
+		}
+	})
+
 	// The dogfood case: reply to the latest mail of a conversation that
 	// already has your own reply in Sent. The preview shows the thread
 	// headers, and thread finds the new reply too.

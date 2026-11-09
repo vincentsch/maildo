@@ -161,6 +161,11 @@ type UpdateDraftRequest struct {
 	Patch   DraftPatch `json:"patch"`
 }
 
+// DeleteDraftRequest names a draft to discard.
+type DeleteDraftRequest struct {
+	DraftID string `json:"draft_id"`
+}
+
 // DraftUpdateValidation is what a provider reports when it checks a draft
 // update for --dry-run. It holds no draft content.
 type DraftUpdateValidation struct {

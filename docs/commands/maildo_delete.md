@@ -59,3 +59,4 @@ This command can attach request metadata. In advanced-output apps, add `--includ
 - archive
 - restore
 - junk
+- draft delete

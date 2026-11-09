@@ -134,6 +134,18 @@ maildo draft send 3c1f2a7
 the original's attachments along, and its preview lists them. To leave them
 out, add `--include-attachments none`.
 
+To throw a draft away, preview it first and then run the command the
+preview prints:
+
+```sh
+maildo draft delete 3c1f2a7 --dry-run
+maildo draft delete 3c1f2a7 --confirm 3c1f2a7
+```
+
+This works like the discard button of a mail program: the draft is gone
+for good and does not go to Trash. `draft delete` only takes drafts, so it
+cannot delete other mail. To move any message to Trash, use `maildo delete`.
+
 `maildo send` writes a new message:
 
 ```sh

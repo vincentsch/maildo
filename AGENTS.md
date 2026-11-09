@@ -289,7 +289,22 @@ the message as a draft before they show it, because Outlook picks the
 recipients and adds the quote itself. The preview then shows that draft
 (`draft_saved: true`), and its `send_command` is a `maildo draft send` for
 it. Tell the user that the draft exists. If they do not want to send it,
-run the delete command the preview prints.
+run the `maildo draft delete` command the preview prints.
+
+### Discard a draft
+
+When the user wants a draft gone, use `draft delete`, not `delete`:
+
+```sh
+maildo draft delete <draft_id> --dry-run --json   # show the draft to the user
+```
+
+Show the user the draft from `.draft` and ask. Then run the preview's
+`apply_command` exactly as given. It carries `--confirm` with the draft's
+id. Like the discard button of a mail program, this removes the draft for
+good: it does not go to Trash, and it cannot be undone. `draft delete`
+refuses any id that is not a draft. `maildo delete` would only move the
+draft to Trash.
 
 Under `policy.drafts_only`, maildo refuses to send. Tell the user, and do
 not look for a way around it.

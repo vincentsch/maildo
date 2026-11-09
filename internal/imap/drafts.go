@@ -186,8 +186,10 @@ func headerValue(raw []byte, name string) string {
 
 // deleteMessage removes a message for good: \Deleted, then UID EXPUNGE.
 // Servers without UIDPLUS cannot expunge one message alone, so there the
-// message only gets the \Deleted flag and the result says so.
-func (c *accountClient) deleteMessage(ctx context.Context, session *imapSession, id string) (string, error) {
+// message only gets the \Deleted flag and the warning says so. what names
+// the message in warnings, such as "the old draft". With an attempt, the
+// STORE is the write that the attempt tracks.
+func (c *accountClient) deleteMessage(ctx context.Context, session *imapSession, id, what string, attempt errs.ProviderWriteAttempt) (string, error) {
 	identity, err := parseMessageID(id)
 	if err != nil {
 		return "", invalidIMAPMessageSelector(c, "id", id)
@@ -198,7 +200,10 @@ func (c *accountClient) deleteMessage(ctx context.Context, session *imapSession,
 	}
 	defer session.forgetSelected()
 	if status.uidValidity != identity.UIDValidity {
-		return "the old draft was not deleted, because the server renumbered the folder it was in", nil
+		if attempt != nil {
+			return "", c.draftNotFound(id)
+		}
+		return what + " was not deleted, because the server renumbered the folder it was in", nil
 	}
 	state, err := session.activeState(ctx)
 	if err != nil {
@@ -206,6 +211,11 @@ func (c *accountClient) deleteMessage(ctx context.Context, session *imapSession,
 	}
 	uidPlus := state.revision == imapActiveRev2 || advertisedCapability(state.capabilities, goimap.CapUIDPlus)
 	set := goimap.UIDSetNum(goimap.UID(identity.UID))
+	if attempt != nil {
+		if err := errs.CrossProviderWriteTransmissionBoundary(attempt); err != nil {
+			return "", err
+		}
+	}
 	err = session.withCommand(ctx, func(dep *imapclient.Client) error {
 		if err := dep.Store(set, &goimap.StoreFlags{Op: goimap.StoreFlagsAdd, Silent: true, Flags: []goimap.Flag{goimap.FlagDeleted}}, nil).Close(); err != nil {
 			return err
@@ -216,12 +226,54 @@ func (c *accountClient) deleteMessage(ctx context.Context, session *imapSession,
 		return nil
 	})
 	if err != nil {
-		return "", err
+		if attempt == nil {
+			return "", err
+		}
+		var imapErr *goimap.Error
+		if errors.As(err, &imapErr) {
+			return "", c.reject(attempt, errs.WriteIMAPDraftDelete, errs.NewWithDetails(errs.CodeProviderForbidden, "the IMAP server refused to delete the draft", map[string]any{
+				"account":        c.account,
+				"provider":       c.provider,
+				"server_message": shortText(imapErr.Text),
+			}))
+		}
+		return "", errs.NewOutcomeUnknown(attempt, errs.OutcomeAcceptanceResponseLost)
 	}
 	if !uidPlus {
-		return "the old draft is only marked as deleted, because the server lacks UIDPLUS; another mail program has to remove it for good (expunge)", nil
+		return what + " is only marked as deleted, because the server lacks UIDPLUS; another mail program has to remove it for good (expunge)", nil
 	}
 	return "", nil
+}
+
+// DeleteDraft discards a draft for good, the way maildo removes the old
+// version of a draft when it updates or sends one. It does not go to
+// Trash. maildo checks first that the id names a draft.
+func (c *accountClient) DeleteDraft(ctx context.Context, req mail.DeleteDraftRequest) (mail.DraftRef, error) {
+	attempt, err := c.newAttempt(errs.WriteIMAPDraftDelete)
+	if err != nil {
+		return mail.DraftRef{}, err
+	}
+	var warning string
+	err = c.withIMAPSession(ctx, func(session *imapSession) error {
+		if _, err := c.draftMessage(ctx, session, req.DraftID, false); err != nil {
+			return err
+		}
+		var err error
+		warning, err = c.deleteMessage(ctx, session, req.DraftID, "the draft", attempt)
+		return err
+	})
+	if err != nil {
+		return mail.DraftRef{}, err
+	}
+	facts, err := errs.VerifiedWriteSuccessFacts(attempt)
+	if err != nil {
+		return mail.DraftRef{}, err
+	}
+	ref := mail.DraftRef{ID: req.DraftID, WriteOutcomeFacts: mail.CloneWriteOutcomeFacts((*mail.WriteOutcomeFacts)(facts)), ProviderMeta: c.draftMeta(mail.MetadataDraftWrite)}
+	if warning != "" {
+		ref.Warnings = []string{warning}
+	}
+	return ref, nil
 }
 
 // draftMessage reads a draft by id: a message in the Drafts folder, or one
@@ -411,7 +463,7 @@ func (c *accountClient) rewriteDraft(ctx context.Context, id string, change func
 		}
 		// The new version is saved; a failure to delete the old one leaves
 		// a duplicate, not a lost draft.
-		warning, err = c.deleteMessage(ctx, session, id)
+		warning, err = c.deleteMessage(ctx, session, id, "the old draft", nil)
 		if err != nil {
 			warning = "the old version of the draft could not be deleted: " + shortCause(err)
 		}
@@ -470,7 +522,7 @@ func (c *accountClient) SendDraft(ctx context.Context, req mail.SendDraftRequest
 	}
 	out := mail.SendOutcome{MessageID: sent.MessageID, WriteOutcomeFacts: sent.WriteOutcomeFacts, SentCopy: sent.SentCopy, Warnings: sent.Warnings}
 	err = c.withIMAPSession(ctx, func(session *imapSession) error {
-		warning, err := c.deleteMessage(ctx, session, req.DraftID)
+		warning, err := c.deleteMessage(ctx, session, req.DraftID, "the old draft", nil)
 		if warning != "" {
 			out.Warnings = append(out.Warnings, warning)
 		}

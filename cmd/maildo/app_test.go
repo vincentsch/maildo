@@ -975,6 +975,7 @@ func assertHandlerAuthSet(t *testing.T, app *rungrad.App, manifest runmanifest.M
 		"delete",
 		"doctor",
 		"draft create",
+		"draft delete",
 		"draft read",
 		"draft send",
 		"draft update",
@@ -1007,8 +1008,8 @@ func assertHandlerAuthSet(t *testing.T, app *rungrad.App, manifest runmanifest.M
 		"send",
 		"thread",
 	}
-	if len(want) != 43 {
-		t.Fatalf("test auth expectation has %d rows, want 43", len(want))
+	if len(want) != 44 {
+		t.Fatalf("test auth expectation has %d rows, want 44", len(want))
 	}
 	wantSet := map[string]bool{}
 	for _, path := range want {

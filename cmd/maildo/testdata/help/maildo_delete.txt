@@ -4,6 +4,7 @@ Related commands:
   archive
   restore
   junk
+  draft delete
 
 Output:
   Shows text you can read in your terminal.

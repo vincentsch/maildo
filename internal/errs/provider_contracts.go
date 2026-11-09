@@ -89,6 +89,7 @@ const (
 	WriteOutlookMessageChange  ProviderWriteOperation = "outlook_message_change"
 	WriteGmailDraftCreate      ProviderWriteOperation = "gmail_draft_create"
 	WriteGmailDraftUpdate      ProviderWriteOperation = "gmail_draft_update"
+	WriteGmailDraftDelete      ProviderWriteOperation = "gmail_draft_delete"
 	WriteGmailDraftSend        ProviderWriteOperation = "gmail_draft_send"
 	WriteGmailDirectSend       ProviderWriteOperation = "gmail_direct_send"
 	WriteGmailReply            ProviderWriteOperation = "gmail_reply"
@@ -126,6 +127,7 @@ const (
 	WriteIMAPFlagClear         ProviderWriteOperation = "imap_flag_clear"
 	WriteIMAPDraftCreate       ProviderWriteOperation = "imap_draft_create"
 	WriteIMAPDraftUpdate       ProviderWriteOperation = "imap_draft_update"
+	WriteIMAPDraftDelete       ProviderWriteOperation = "imap_draft_delete"
 	WriteIMAPReply             ProviderWriteOperation = "imap_reply"
 	WriteIMAPForward           ProviderWriteOperation = "imap_forward"
 )
@@ -745,7 +747,7 @@ func operationAllowedForProvider(provider ProviderName, operation ProviderWriteO
 		}
 	case ProviderGmail:
 		switch operation {
-		case WriteGmailDraftCreate, WriteGmailDraftUpdate, WriteGmailDraftSend, WriteGmailDirectSend,
+		case WriteGmailDraftCreate, WriteGmailDraftUpdate, WriteGmailDraftDelete, WriteGmailDraftSend, WriteGmailDirectSend,
 			WriteGmailReply, WriteGmailForward, WriteGmailAttachmentAdd, WriteGmailAttachmentRemove,
 			WriteGmailLabelCreate, WriteGmailLabelRename, WriteGmailLabelDelete, WriteGmailMove,
 			WriteGmailCopy, WriteGmailArchive, WriteGmailDelete, WriteGmailRestore, WriteGmailJunk,
@@ -760,7 +762,7 @@ func operationAllowedForProvider(provider ProviderName, operation ProviderWriteO
 		case WriteSMTPDirectSend, WriteIMAPFolderCreate, WriteIMAPFolderRename, WriteIMAPFolderDelete,
 			WriteIMAPCopy, WriteIMAPMove, WriteIMAPArchive, WriteIMAPDelete, WriteIMAPRestore,
 			WriteIMAPJunk, WriteIMAPMarkRead, WriteIMAPMarkUnread, WriteIMAPFlagSet, WriteIMAPFlagClear,
-			WriteIMAPDraftCreate, WriteIMAPDraftUpdate, WriteIMAPReply, WriteIMAPForward:
+			WriteIMAPDraftCreate, WriteIMAPDraftUpdate, WriteIMAPDraftDelete, WriteIMAPReply, WriteIMAPForward:
 			return true
 		default:
 			return false

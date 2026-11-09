@@ -162,6 +162,35 @@ func (c *Client) UpdateDraft(ctx context.Context, req mail.UpdateDraftRequest) (
 	return mail.DraftRef{ID: updated.ID, WriteOutcomeFacts: facts, ProviderMeta: gmailDraftMeta(mail.MetadataDraftWrite, updated.MessageID, nil)}, nil
 }
 
+// DeleteDraft discards a draft with Gmail's drafts.delete, which removes
+// it for good, as Discard draft does in Gmail. It does not go to Trash.
+func (c *Client) DeleteDraft(ctx context.Context, req mail.DeleteDraftRequest) (mail.DraftRef, error) {
+	if _, err := c.fetchDraft(ctx, req.DraftID, "minimal", "", "id", limits.GmailMaxJSONResponseBytes); err != nil {
+		return mail.DraftRef{}, err
+	}
+	op := errs.WriteGmailDraftDelete
+	attempt, err := errs.NewProviderWriteAttempt(c.account, errs.ProviderGmail, op)
+	if err != nil {
+		return mail.DraftRef{}, err
+	}
+	path := "/drafts/" + url.PathEscape(req.DraftID)
+	status, data, err := c.gmailMutationWriteRequest(ctx, http.MethodDelete, path, nil, nil, "", attempt, limits.GmailMaxJSONResponseBytes)
+	if err != nil {
+		return mail.DraftRef{}, err
+	}
+	if status == http.StatusNotFound || status == http.StatusGone {
+		return mail.DraftRef{}, errs.NewWriteRejected(attempt, c.definitiveWriteRejection(draftNotFound(c.account, req.DraftID), op))
+	}
+	if status < 200 || status >= 300 {
+		return mail.DraftRef{}, c.gmailWriteStatusError(attempt, op, path, status, data)
+	}
+	facts, err := errs.VerifiedWriteSuccessFacts(attempt)
+	if err != nil {
+		return mail.DraftRef{}, err
+	}
+	return mail.DraftRef{ID: req.DraftID, WriteOutcomeFacts: mail.CloneWriteOutcomeFacts((*mail.WriteOutcomeFacts)(facts)), ProviderMeta: gmailDraftMeta(mail.MetadataDraftWrite, "", nil)}, nil
+}
+
 func (c *Client) ValidateDraftUpdate(ctx context.Context, req mail.UpdateDraftRequest) (mail.DraftUpdateValidation, error) {
 	prepared, err := c.prepareDraftUpdate(ctx, req)
 	if err != nil {

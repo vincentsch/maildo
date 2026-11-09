@@ -2108,6 +2108,7 @@ type DraftState struct {
 	ReadCalls             atomic.Int64
 	MetadataOnlyReadCalls atomic.Int64
 	UpdateCalls           atomic.Int64
+	DeleteCalls           atomic.Int64
 	SendCalls             atomic.Int64
 	DirectCalls           atomic.Int64
 	AttachmentAddCalls    atomic.Int64
@@ -2509,6 +2510,22 @@ func (c FakeDraftClient) UpdateDraft(_ context.Context, req mail.UpdateDraftRequ
 		ref.Warnings = []string{c.state.UpdateWarning}
 	}
 	return ref, nil
+}
+
+// DeleteDraft discards a draft: it is gone from the fake's drafts.
+func (c FakeDraftClient) DeleteDraft(_ context.Context, req mail.DeleteDraftRequest) (mail.DraftRef, error) {
+	if err := c.lifetime.err(); err != nil {
+		return mail.DraftRef{}, err
+	}
+	c.state.mu.Lock()
+	defer c.state.mu.Unlock()
+	draft, ok := c.state.drafts[req.DraftID]
+	if !ok || !draft.IsDraft {
+		return mail.DraftRef{}, c.draftNotFound(req.DraftID)
+	}
+	c.state.DeleteCalls.Add(1)
+	delete(c.state.drafts, req.DraftID)
+	return mail.DraftRef{ID: req.DraftID, WriteOutcomeFacts: errs.CloneWriteOutcomeFacts(&errs.WriteOutcomeFacts{Outcome: errs.WriteOutcomeSucceeded, WriteMayHaveLanded: true, AcceptedByProvider: true, ConfirmedAfterWrite: true, Succeeded: true}), ProviderMeta: fakeDraftMeta(mail.MetadataDraftWrite)}, nil
 }
 
 func (c FakeDraftClient) ValidateDraftUpdate(_ context.Context, req mail.UpdateDraftRequest) (mail.DraftUpdateValidation, error) {

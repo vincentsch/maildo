@@ -33,6 +33,7 @@ Handle your email from the terminal
 - [maildo doctor](maildo_doctor.md) - Check an account's servers, login and folders
 - [maildo draft](maildo_draft.md) - Write, change and send drafts
 - [maildo draft create](maildo_draft_create.md) - Save a new draft
+- [maildo draft delete](maildo_draft_delete.md) - Discard a draft for good
 - [maildo draft read](maildo_draft_read.md) - Show a draft
 - [maildo draft send](maildo_draft_send.md) - Send a draft
 - [maildo draft update](maildo_draft_update.md) - Change a draft

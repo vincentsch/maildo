@@ -13,6 +13,7 @@ maildo draft read --id 3c1f2a7
 
 Available Commands:
   create      Save a new draft
+  delete      Discard a draft for good
   read        Show a draft
   send        Send a draft
   update      Change a draft

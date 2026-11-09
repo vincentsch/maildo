@@ -103,6 +103,7 @@ maildo draft create --to ann@example.com --subject "..." --body-file body.md --m
 maildo attachments add --draft-id <draft_id> report.pdf --json  # then use the draft_id it returns
 maildo draft read <draft_id> --json
 maildo draft send <draft_id> --dry-run --json              # show this, then ask
+maildo draft delete <draft_id> --dry-run --json            # discard: show it, then run apply_command
 maildo send --to ann@example.com --subject "..." --body "..." --dry-run --json
 ```
 
@@ -135,8 +136,13 @@ means maildo sent this exact message before. Tell the user before you ask.
 On Outlook, `reply --send --dry-run` and `forward --send --dry-run` save
 the message as a draft first, because Outlook writes replies itself. The
 preview shows that draft, and its `send_command` sends it. Tell the user
-the draft exists. If they do not want to send it, run the delete command
-the preview prints.
+the draft exists. If they do not want to send it, run the
+`maildo draft delete` command the preview prints.
+
+To discard a draft, use `draft delete <draft_id> --dry-run --json`, show
+the user `.draft`, and after a yes run its `apply_command`. The draft is
+gone for good, like the discard button of a mail program. `maildo delete`
+would only move it to Trash.
 
 Exit code 4 means the account's policy or the provider does not allow
 this. Tell the user what you wanted to do and stop.

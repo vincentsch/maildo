@@ -72,6 +72,10 @@ Windows is not supported yet, but you can use maildo inside WSL.
   `folders delete` deletes only empty folders without subfolders.
 - `maildo attachments add` and `attachments remove` change the files of a
   draft.
+- `maildo draft delete` discards a draft like the discard button of a mail
+  program: the draft is gone for good and does not go to Trash. It takes
+  only drafts and needs `--confirm` with the draft's id, which the
+  `--dry-run` preview prints.
 - `maildo rules` manages Outlook Inbox rules. `rules health` finds rules
   with problems, and creating or changing a rule needs `--apply`.
 - `maildo categories` shows and sets Outlook categories, and your own

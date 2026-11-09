@@ -130,6 +130,25 @@ func (c *Client) UpdateDraft(ctx context.Context, req mail.UpdateDraftRequest) (
 	return mail.DraftRef{ID: req.DraftID, WriteOutcomeFacts: outlookWriteSuccessFacts(), ProviderMeta: graphDraftMeta(mail.MetadataDraftWrite)}, nil
 }
 
+// DeleteDraft discards a draft with Graph's DELETE, the same call maildo
+// makes after it sends a draft. The draft does not go to Deleted Items.
+func (c *Client) DeleteDraft(ctx context.Context, req mail.DeleteDraftRequest) (mail.DraftRef, error) {
+	if _, err := c.getDraftByID(ctx, req.DraftID, "isDraft", ""); err != nil {
+		return mail.DraftRef{}, err
+	}
+	status, _, err := c.graphWrite(ctx, http.MethodDelete, c.graphBaseURL+"/me/messages/"+url.PathEscape(req.DraftID), nil)
+	if err != nil {
+		return mail.DraftRef{}, err
+	}
+	if status == http.StatusNotFound || status == http.StatusGone {
+		return mail.DraftRef{}, c.draftNotFound(req.DraftID)
+	}
+	if status != http.StatusNoContent && status != http.StatusOK {
+		return mail.DraftRef{}, c.writeStatusError(errs.WriteOutlookCompose, status, c.composeError)
+	}
+	return mail.DraftRef{ID: req.DraftID, WriteOutcomeFacts: outlookWriteSuccessFacts(), ProviderMeta: graphDraftMeta(mail.MetadataDraftWrite)}, nil
+}
+
 func (c *Client) ValidateDraftUpdate(ctx context.Context, req mail.UpdateDraftRequest) (mail.DraftUpdateValidation, error) {
 	if _, err := c.getDraftByID(ctx, req.DraftID, "isDraft", ""); err != nil {
 		return mail.DraftUpdateValidation{}, err

@@ -29,6 +29,7 @@ const (
 	ClientAccessDirectSend                               ClientAccessKind = "direct_send"
 	ClientAccessDraftAttachmentsMutate                   ClientAccessKind = "draft_attachments_mutate"
 	ClientAccessDraftCreate                              ClientAccessKind = "draft_create"
+	ClientAccessDraftDelete                              ClientAccessKind = "draft_delete"
 	ClientAccessDraftRead                                ClientAccessKind = "draft_read"
 	ClientAccessDraftSend                                ClientAccessKind = "draft_send"
 	ClientAccessDraftUpdate                              ClientAccessKind = "draft_update"
@@ -71,6 +72,7 @@ var accessCapabilities = map[ClientAccessKind][]Capability{
 	ClientAccessDirectSend:                               {CapSendDirect},
 	ClientAccessDraftAttachmentsMutate:                   {CapDraftRead, CapAttachmentsMutate},
 	ClientAccessDraftCreate:                              {CapDraftCreate},
+	ClientAccessDraftDelete:                              {CapDraftRead, CapDraftUpdate},
 	ClientAccessDraftRead:                                {CapDraftRead},
 	ClientAccessDraftSend:                                {CapDraftRead, CapDraftSend},
 	ClientAccessDraftUpdate:                              {CapDraftRead, CapDraftUpdate},

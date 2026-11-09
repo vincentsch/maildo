@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
 	composepkg "github.com/vincentsch/maildo/internal/compose"
 	"github.com/vincentsch/maildo/internal/mail"
 	"github.com/vincentsch/maildo/internal/provider"
@@ -376,4 +377,77 @@ func bodyPatchChange(p mail.BodyPatch) string {
 		return "clear"
 	}
 	return "replace"
+}
+
+// draftDeletePreview is the --dry-run output of draft delete: the draft as
+// draft read shows it, and the command that discards it.
+type draftDeletePreview struct {
+	DryRun       bool       `json:"dry_run"`
+	Operation    string     `json:"operation"`
+	Account      string     `json:"account"`
+	Provider     string     `json:"provider"`
+	Draft        mail.Draft `json:"draft"`
+	ApplyCommand string     `json:"apply_command"`
+}
+
+// draftAsOutgoing shows a stored draft the way send previews show a
+// message.
+func draftAsOutgoing(d mail.Draft) outgoing {
+	msg := outgoing{To: d.To, CC: d.CC, BCC: d.BCC, ReplyTo: d.ReplyTo, Subject: d.Subject, Body: strings.ReplaceAll(d.Body.Content, "\r\n", "\n"), DraftID: d.ID, recipientsKnown: true}
+	if d.From.Address != "" || d.From.Name != "" {
+		from := d.From
+		msg.From = &from
+	}
+	for _, a := range d.Attachments {
+		msg.Attachments = append(msg.Attachments, outgoingAttachment{Name: a.Name, ContentType: a.ContentType, Size: a.Size, Inline: a.IsInline})
+	}
+	return msg
+}
+
+// draftDeleteConfirmed reports whether --confirm names the draft: by its
+// full id, or by the id the user typed.
+func draftDeleteConfirmed(cmd *cobra.Command, id, confirm string) bool {
+	confirm = strings.TrimSpace(confirm)
+	if confirm == "" {
+		return false
+	}
+	return confirm == id || confirm == cmd.Annotations[annotationShortIDs]
+}
+
+func writeDraftDeletePreview(f *rungrad.Factory, cmd *cobra.Command, acct provider.ResolvedAccount, d mail.Draft, id string) error {
+	if d.ID == "" {
+		d.ID = id
+	}
+	p := draftDeletePreview{
+		DryRun:       true,
+		Operation:    "draft_delete",
+		Account:      acct.Name,
+		Provider:     acct.Provider,
+		Draft:        d,
+		ApplyCommand: changeCommand(cmd, nil, [][2]string{{"account", acct.Name}, {"confirm", id}}),
+	}
+	full, _ := cmd.Flags().GetBool("full")
+	return f.WriteResult(p, func(w io.Writer) {
+		fmt.Fprintf(w, "Would discard this draft in %s:\n\n", plainField(acct.Name))
+		writeOutgoing(w, draftAsOutgoing(d), full)
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "The draft would be gone for good. It does not go to Trash.")
+		fmt.Fprintln(w, "Nothing was changed. To discard it, run:")
+		writeCommand(w, p.ApplyCommand, "Run the same command again without --dry-run, with --confirm and the draft's id.")
+	})
+}
+
+// humanDraftDeleted says which draft was discarded.
+func humanDraftDeleted(acct, subject string, warned bool) func(io.Writer) {
+	return func(w io.Writer) {
+		name := "the draft"
+		if strings.TrimSpace(subject) != "" {
+			name += " " + subjectText(subject)
+		}
+		if warned {
+			fmt.Fprintf(w, "Asked the server to discard %s in %s. See the warning above.\n", name, plainField(acct))
+			return
+		}
+		fmt.Fprintf(w, "Discarded %s in %s. It is gone for good and did not go to Trash.\n", name, plainField(acct))
+	}
 }

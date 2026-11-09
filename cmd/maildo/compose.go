@@ -18,6 +18,15 @@ import (
 	"github.com/vincentsch/rungrad"
 )
 
+const draftDeleteLong = `Discard a draft for good
+
+This works like the discard button of a mail program. The draft is removed
+from Drafts and does not go to Trash. The id must name a draft, so this
+cannot delete other mail. To move a message to Trash, use maildo delete.
+
+Run it with --dry-run first. The preview shows the draft and prints the
+command that discards it, with --confirm and the draft's id.`
+
 // composeModule holds the draft commands and send, reply and forward.
 type composeModule struct {
 	h    *handlers
@@ -136,6 +145,29 @@ func newComposeModule(h *handlers) composeModule {
 			run:          h.draftUpdate,
 		},
 		{
+			path: "draft delete", use: "delete [id]", short: "Discard a draft for good",
+			long: draftDeleteLong,
+			examples: []string{
+				`maildo draft delete 3c1f2a7 --dry-run`,
+				`maildo draft delete 3c1f2a7 --confirm 3c1f2a7`,
+				`maildo draft delete --id 3c1f2a7 --account work --dry-run --json`,
+			},
+			related:      []string{"draft read", "delete"},
+			outputModes:  resultModes,
+			mutates:      true,
+			destructive:  true,
+			supportsMeta: true,
+			args:         cobra.MaximumNArgs(1),
+			idArg:        true,
+			configure: func(cmd *cobra.Command) {
+				provider.ConfigureAccountFlags(cmd, provider.ScopeRequest{Mode: provider.ModeSingle})
+				cmd.Flags().String("id", "", "Draft id, or the short id maildo printed")
+				cmd.Flags().String("confirm", "", "The draft's id again, to confirm; --dry-run prints the command")
+				cmd.Flags().Bool("full", false, "Show the whole body in the preview, also when it is long")
+			},
+			run: h.draftDelete,
+		},
+		{
 			path: "draft send", use: "send [id]", short: "Send a draft",
 			examples: []string{
 				`maildo draft send 3c1f2a7`,
@@ -217,6 +249,7 @@ func newComposeModule(h *handlers) composeModule {
 		"draft create",
 		"draft read",
 		"draft update",
+		"draft delete",
 		"draft send",
 		"send",
 		"reply",
@@ -231,11 +264,11 @@ func (m composeModule) Groups() []rungrad.Group {
 
 func (m composeModule) Commands() []*rungrad.Command {
 	draft := m.defs[0].command()
-	// defs[1:5] are the draft subcommands; defs[5:] are top-level compose commands.
-	for _, def := range m.defs[1:5] {
+	// defs[1:6] are the draft subcommands; defs[6:] are top-level compose commands.
+	for _, def := range m.defs[1:6] {
 		draft.AddCommand(def.command())
 	}
-	return []*rungrad.Command{draft, m.defs[5].command(), m.defs[6].command(), m.defs[7].command()}
+	return []*rungrad.Command{draft, m.defs[6].command(), m.defs[7].command(), m.defs[8].command()}
 }
 
 func (m composeModule) Catalog() []rungrad.CommandSpec {
@@ -772,6 +805,67 @@ func (h *handlers) draftUpdate(f *rungrad.Factory, cmd *cobra.Command, _ []strin
 			ProviderMeta:      cloneProviderMetadataForResult(ref.ProviderMeta),
 		}
 		return f.WriteResultWithMeta(result, composeMeta(cmd.CommandPath(), sel, result.Operation, result.DraftID, result.MessageID), humanDraftWrite(f, result))
+	})
+}
+
+// draftDelete discards a draft. It reads the draft first, so the preview
+// shows what goes, and so only a draft can be deleted this way.
+func (h *handlers) draftDelete(f *rungrad.Factory, cmd *cobra.Command, _ []string) error {
+	return provider.WithAccountClientScope(cmd.Context(), func(clientScope provider.AccountClientScope) error {
+		sel, acct, err := h.composeScope(f, cmd, clientScope)
+		if err != nil {
+			return err
+		}
+		id, err := requiredDraftID(cmd)
+		if err != nil {
+			return err
+		}
+		if err := provider.CheckClientAccess(acct, provider.ClientAccessDraftDelete); err != nil {
+			return err
+		}
+		var draft mail.Draft
+		if err := provider.WithAccountClient(cmd.Context(), clientScope, acct, provider.ClientAccessDraftRead, func(reader provider.DraftReader) error {
+			var err error
+			draft, err = reader.ReadDraft(cmd.Context(), mail.ReadDraftRequest{DraftID: id, BodyMode: mail.BodyModeReadable})
+			return err
+		}); err != nil {
+			return err
+		}
+		if f.DryRun() {
+			return writeDraftDeletePreview(f, cmd, acct, draft, id)
+		}
+		if confirm, _ := cmd.Flags().GetString("confirm"); !draftDeleteConfirmed(cmd, id, confirm) {
+			return errs.NewWithDetails(errs.CodeConfirmationRequired,
+				"discarding a draft needs --confirm with the draft's id; run the command with --dry-run to see the draft and the full command",
+				map[string]any{"account": acct.Name, "provider": acct.Provider, "draft_id": id})
+		}
+		var ref mail.DraftRef
+		err = provider.WithAccountClient(cmd.Context(), clientScope, acct, provider.ClientAccessDraftDelete, func(deleter provider.DraftDeleter) error {
+			var err error
+			ref, err = deleter.DeleteDraft(cmd.Context(), mail.DeleteDraftRequest{DraftID: id})
+			return err
+		})
+		logStatus := h.logChange(f, cmd, acct, "draft_delete", audit.Change{Kind: "draft", ID: id, Name: draft.Subject}, err)
+		if err != nil {
+			return err
+		}
+		warnAll(f, ref.Warnings)
+		result := draftWriteResult{
+			AccountSelection:  sel,
+			Operation:         "draft_delete",
+			DraftID:           id,
+			To:                draft.To,
+			CC:                draft.CC,
+			BCC:               draft.BCC,
+			ReplyTo:           draft.ReplyTo,
+			Subject:           draft.Subject,
+			AttachmentCount:   len(draft.Attachments),
+			ActionLogStatus:   logStatus,
+			Warnings:          ref.Warnings,
+			WriteOutcomeFacts: mail.CloneWriteOutcomeFacts(ref.WriteOutcomeFacts),
+			ProviderMeta:      cloneProviderMetadataForResult(ref.ProviderMeta),
+		}
+		return f.WriteResultWithMeta(result, composeMeta(cmd.CommandPath(), sel, result.Operation, result.DraftID, ""), humanDraftDeleted(acct.Name, draft.Subject, len(ref.Warnings) > 0))
 	})
 }
 

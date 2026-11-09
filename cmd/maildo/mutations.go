@@ -163,7 +163,7 @@ func newMutationsModule(h *handlers) mutationsModule {
 				`maildo delete --internet-id "<message-id@example.com>" --apply --json`,
 				`maildo delete --query "spam" --all --apply`,
 			},
-			related:      []string{"archive", "restore", "junk"},
+			related:      []string{"archive", "restore", "junk", "draft delete"},
 			outputModes:  resultModes,
 			mutates:      true,
 			supportsMeta: true,

@@ -124,7 +124,8 @@ message you read goes out, and only once.
 Every change, draft and send is in the action log, `audit/actions.jsonl` in
 maildo's config folder ([where that is](safety.md#the-action-log)). Drafts
 the agent wrote are in your Drafts folder, and `maildo list Drafts` shows
-them.
+them. To throw one away, run `maildo draft delete <id> --dry-run` and then
+the command it prints.
 
 ## For scripts
 

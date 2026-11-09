@@ -22,6 +22,12 @@ type DraftUpdater interface {
 	UpdateDraft(ctx context.Context, req mail.UpdateDraftRequest) (mail.DraftRef, error)
 }
 
+// DraftDeleter discards a draft the way a mail program does: the draft is
+// gone and does not go to Trash.
+type DraftDeleter interface {
+	DeleteDraft(ctx context.Context, req mail.DeleteDraftRequest) (mail.DraftRef, error)
+}
+
 // DraftSender sends a saved draft.
 type DraftSender interface {
 	ValidateDraftSend(ctx context.Context, req mail.SendDraftRequest) (mail.Draft, error)

@@ -132,7 +132,8 @@ A few things depend on the server:
   Drafts folder. When you change a draft, maildo saves a new message and
   deletes the old one, so the draft gets a new id. maildo prints it. On a
   server without UIDPLUS, maildo can only mark the old draft as deleted and
-  tells you so.
+  tells you so. `maildo draft delete` removes a draft the same way, and it
+  does not go to Trash.
 
 ## How maildo uses IMAP
 
