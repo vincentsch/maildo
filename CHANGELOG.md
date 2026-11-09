@@ -130,11 +130,11 @@ Windows is not supported yet, but you can use maildo inside WSL.
 ### For scripts and agents
 
 - Stable `--json` output for every command, `--jq` that prints strings
-  without quotes, and `--template`. Flags have one style in every message:
-  `read`, `flagged`, `has_attachments`, and `inline` for attachments.
-  Address lists are always there, as `[]` when they are empty, and
-  `thread` lists each message's `to` and `cc`. After every change to a
-  message, `new_id` holds the id it has now.
+  without quotes, and `--template`. Message flags have one style, such as
+  `read` and `flagged`, and attachments say `inline`. Address lists are
+  always there, as `[]` when they are empty, and `thread` lists each
+  message's `to` and `cc`. After every change to a message, `new_id` holds
+  the id it has now.
 - Errors give a cause, a next step and a stable `code`. For changes, an
   `outcome` says whether it is safe to try again. This works on every
   provider and for every kind of change, so a lost answer from the server

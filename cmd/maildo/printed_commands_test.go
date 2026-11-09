@@ -9,8 +9,8 @@ import (
 	"github.com/vincentsch/rungrad/testutil"
 )
 
-// Text that a shell treats specially: line breaks, both kinds of quotes,
-// backslashes, $ and backticks, a leading dash, and letters outside ASCII.
+// Arguments that careless quoting would break. A shell treats each of
+// their odd characters in its own way.
 const (
 	trickyBody    = "Hi Maria,\n\nthank you for the \"final\" logo files!\nIt's grüß Gott 🎉, $HOME `id` $(echo no) and a literal \\n.\nA backslash at the end \\\n\nBest,\nSam\n"
 	trickySubject = "Maria's \"logo\" files, grüß $USER"

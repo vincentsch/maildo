@@ -172,7 +172,7 @@ Each row in `.messages` of `list` and `search` has these fields:
 | `account`, `provider` | the account the message is in, and its provider |
 | `internet_message_id` | the Message-ID header, for `--internet-id` |
 | `thread_id` | the conversation, for `thread --thread-id` |
-| `folder` | the folder, with `path`, `display_name`, `id` and `well_known_name` (such as `inbox`) |
+| `folder` | the folder; `path` names it, and `well_known_name` says what it is, such as `inbox` |
 | `from` | the sender, with `name` and `address` |
 | `to_count`, `cc_count` | how many people the message went to |
 | `subject` | the subject |
@@ -185,9 +185,10 @@ Each row in `.messages` of `list` and `search` has these fields:
 | `provider_metadata` | details that only this provider has |
 
 Messages in `thread` have the same fields, except that they list the
-recipients in `to` and `cc` instead of counting them. `read` has them too,
-with `to`, `cc`, `bcc` and `reply_to`, the `body` and the `attachments`.
-Lists of addresses are always there, as `[]` when they are empty.
+recipients in `to` and `cc` instead of counting them. `read` has the
+fields of a thread message, plus the body and the attachments. It also
+lists `bcc` and `reply_to`. Lists of addresses are always there, as `[]`
+when they are empty.
 
 Messages have two dates. `received_at` is when the message arrived in the
 mailbox, and `sent_at` is the date in the message itself. Lists, threads

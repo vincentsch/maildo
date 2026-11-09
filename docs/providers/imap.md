@@ -110,9 +110,9 @@ MAILDO_IMAP_PASSWORD='your-password' maildo login --email me@example.org \
 ```
 
 maildo picks STARTTLS by itself only on the ports that usually have it,
-such as 143 and 587. On any other port it uses TLS from the start. When your server wants STARTTLS there, add
-`--imap-tls starttls` or `--smtp-tls starttls`. For example, IMAP with
-STARTTLS on port 1143:
+such as 143 and 587. On any other port it uses TLS from the start. When
+your server wants STARTTLS there, add `--imap-tls starttls` or
+`--smtp-tls starttls`. For example, IMAP with STARTTLS on port 1143:
 
 ```sh
 maildo login --email me@example.org \

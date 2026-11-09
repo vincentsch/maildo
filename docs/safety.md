@@ -139,8 +139,8 @@ To send it, run:
 ```
 
 You can paste the printed command into a shell as it is. maildo quotes
-every argument, so the shell passes on quotes, `$` signs and letters
-outside ASCII unchanged. A body given with `--body` that has line breaks
+every argument, so the shell passes on every character unchanged, quotes
+and `$` signs included. A body given with `--body` that has line breaks
 makes the command span several lines, with the line breaks inside the
 quotes. With `--body-file`, the command names the file and stays on one
 line. When a command has characters a terminal cannot show, such as a

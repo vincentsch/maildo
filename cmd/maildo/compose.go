@@ -29,10 +29,10 @@ With --quote short it quotes only the start, and with --quote none it adds
 no quote. --quote-language sets the language of that line, en or de; auto
 picks it from your locale.
 
-Pick the message by its id, by its Message-ID with --internet-id, or with
---query and --latest, which takes the newest match. --first takes the
-first match, which is the same message, because matches come newest
-first. --reply-all also writes to everyone else on the message.`
+Pick the message by its id, or find it with --query and --latest, which
+takes the newest match. --first takes the first match, which is the same
+message, because matches come newest first. --internet-id picks it by its
+Message-ID. --reply-all also writes to everyone else on the message.`
 
 const draftDeleteLong = `Discard a draft for good
 

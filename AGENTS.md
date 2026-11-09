@@ -160,10 +160,9 @@ maildo attachments download <id> --all --to <folder> --json
   `--limit`. `has_more` says whether `--page 2` has more.
 - Each row has a `preview` with the start of the message. Use it to sort out
   which messages matter before you read whole messages.
-- A row also has `from`, `subject`, `folder`, `to_count` and `cc_count`,
-  and the flags `read`, `flagged` and `has_attachments`. The table of all
-  row fields is in `docs/agents.md`. Lists of addresses, such as `to` and
-  `cc` in `read`, are always there, as `[]` when they are empty.
+- A row also has the flags `read` and `flagged`. The table of all row
+  fields is in `docs/agents.md`. Lists of addresses, such as `to` and `cc`
+  in `read`, are always there, as `[]` when they are empty.
 - Dates are in `received_at` (when the message arrived) and `sent_at` (the
   date the sender's program wrote). Previews of changes use the same names.
 - The search syntax is in `docs/search.md`. Trash and Junk are left out
