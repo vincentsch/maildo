@@ -15,6 +15,7 @@ maildo auth login
 maildo auth login --email you@example.com
 MAILDO_IMAP_PASSWORD=app-password maildo auth login --email you@posteo.de
 maildo auth login --email you@example.net --imap-host imap.example.net --smtp-host smtp.example.net
+maildo auth login --email you@posteo.de --dry-run
 maildo auth login --provider fastmail --name personal --email you@fastmail.com
 maildo auth login --provider outlook --name work
 maildo auth login --provider outlook --name work --device-code

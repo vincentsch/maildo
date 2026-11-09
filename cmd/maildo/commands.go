@@ -14,6 +14,7 @@ type cmdDef struct {
 	path           string
 	use            string
 	short          string
+	long           string
 	examples       []string
 	related        []string
 	outputModes    []string
@@ -59,6 +60,7 @@ func (d cmdDef) command() *rungrad.Command {
 	return &rungrad.Command{
 		Use:            d.use,
 		Short:          d.short,
+		Long:           d.long,
 		Examples:       append([]string(nil), d.examples...),
 		Related:        append([]string(nil), d.related...),
 		OutputModes:    append([]string(nil), d.outputModes...),
@@ -132,6 +134,19 @@ type authModule struct {
 
 // newAuthModule declares the auth commands. maildo login and maildo auth
 // login run the same handler, but each has its own examples.
+// loginLong is the help text of login and auth login.
+const loginLong = `Log in to a mail account
+
+maildo finds the servers from your address and checks the login before it
+saves anything. Outlook and Gmail accounts sign in through the browser. For
+an IMAP or Fastmail account, maildo asks for the password. To log in without
+a prompt, as in a script, put the password in MAILDO_IMAP_PASSWORD. maildo
+uses that one password for IMAP and for SMTP, with the same username. There
+is no separate SMTP password.
+
+With --dry-run, maildo shows the servers and the account name it would use,
+and does not log in.`
+
 func newAuthModule(h *handlers) authModule {
 	resultModes := []string{rungrad.OutputModeHuman, rungrad.OutputModeJSON, rungrad.OutputModeJQ, rungrad.OutputModeTemplate}
 	loginFlags := func(cmd *cobra.Command) {
@@ -157,12 +172,13 @@ func newAuthModule(h *handlers) authModule {
 	}
 	defs := []cmdDef{
 		{
-			path: "login", use: "login", short: "Log in to a mail account", groupID: "auth",
+			path: "login", use: "login", short: "Log in to a mail account", long: loginLong, groupID: "auth",
 			examples: []string{
 				"maildo login",
 				"maildo login --email you@example.com",
 				"MAILDO_IMAP_PASSWORD=app-password maildo login --email you@posteo.de",
 				"maildo login --email you@example.net --imap-host imap.example.net --smtp-host smtp.example.net",
+				"maildo login --email you@posteo.de --dry-run",
 				"maildo login --provider fastmail --name personal --email you@fastmail.com",
 				"maildo login --provider outlook --name work",
 				"maildo login --provider outlook --name work --device-code",
@@ -181,12 +197,13 @@ func newAuthModule(h *handlers) authModule {
 			related:  []string{"login"},
 		},
 		{
-			path: "auth login", use: "login", short: "Log in to a mail account",
+			path: "auth login", use: "login", short: "Log in to a mail account", long: loginLong,
 			examples: []string{
 				"maildo auth login",
 				"maildo auth login --email you@example.com",
 				"MAILDO_IMAP_PASSWORD=app-password maildo auth login --email you@posteo.de",
 				"maildo auth login --email you@example.net --imap-host imap.example.net --smtp-host smtp.example.net",
+				"maildo auth login --email you@posteo.de --dry-run",
 				"maildo auth login --provider fastmail --name personal --email you@fastmail.com",
 				"maildo auth login --provider outlook --name work",
 				"maildo auth login --provider outlook --name work --device-code",

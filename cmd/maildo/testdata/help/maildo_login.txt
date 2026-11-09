@@ -1,5 +1,15 @@
 Log in to a mail account
 
+maildo finds the servers from your address and checks the login before it
+saves anything. Outlook and Gmail accounts sign in through the browser. For
+an IMAP or Fastmail account, maildo asks for the password. To log in without
+a prompt, as in a script, put the password in MAILDO_IMAP_PASSWORD. maildo
+uses that one password for IMAP and for SMTP, with the same username. There
+is no separate SMTP password.
+
+With --dry-run, maildo shows the servers and the account name it would use,
+and does not log in.
+
 Related commands:
   auth login
   auth list
@@ -19,6 +29,7 @@ maildo login
 maildo login --email you@example.com
 MAILDO_IMAP_PASSWORD=app-password maildo login --email you@posteo.de
 maildo login --email you@example.net --imap-host imap.example.net --smtp-host smtp.example.net
+maildo login --email you@posteo.de --dry-run
 maildo login --provider fastmail --name personal --email you@fastmail.com
 maildo login --provider outlook --name work
 maildo login --provider outlook --name work --device-code

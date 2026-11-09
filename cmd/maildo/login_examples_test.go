@@ -85,8 +85,11 @@ func TestLoginExamplesWorkFromAnEmptyConfig(t *testing.T) {
 			}
 			t.Run(example, func(t *testing.T) {
 				h := newMailServerHarness(t, user, "Sent", "Trash")
+				if strings.Contains(example, "--dry-run") {
+					args = slicesDelete(args, "--dry-run")
+				}
 				dry := h.run(append(args, "--dry-run")...)
-				if dry.Exit != 0 {
+				if dry.Exit != 0 || !strings.Contains(dry.Stdout, "Would log in") {
 					t.Fatalf("dry run exit %d: %s%s", dry.Exit, dry.Stdout, dry.Stderr)
 				}
 				real := h.run(args...)
@@ -370,4 +373,15 @@ func TestDoctorFailsWhenTheLoginDoes(t *testing.T) {
 	if res.Exit == 0 || !strings.Contains(res.Stdout, "FAILED") {
 		t.Fatalf("doctor with a rejected password: exit %d\n%s%s", res.Exit, res.Stdout, res.Stderr)
 	}
+}
+
+// slicesDelete returns args without the word drop.
+func slicesDelete(args []string, drop string) []string {
+	out := make([]string, 0, len(args))
+	for _, a := range args {
+		if a != drop {
+			out = append(out, a)
+		}
+	}
+	return out
 }
