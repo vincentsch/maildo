@@ -84,15 +84,18 @@ func TestOutlookSendCLIReportsUnconfirmedWritesAndKeepsContentPrivate(t *testing
 					var machine struct {
 						Code string `json:"code"`
 						errs.WriteOutcomeFacts
+						// Errors carry these two; results do not.
+						MayHaveLanded bool `json:"write_may_have_landed"`
+						Retry         bool `json:"retry_safe"`
 					}
 					if err := json.Unmarshal([]byte(res.Stderr), &machine); err != nil {
 						t.Fatal(err)
 					}
 					if stage == "dial_failure" {
-						if machine.Outcome != errs.WriteOutcomeNotApplied || machine.WriteMayHaveLanded || !machine.RetrySafe {
+						if machine.Outcome != errs.WriteOutcomeNotApplied || machine.MayHaveLanded || !machine.Retry {
 							t.Fatalf("pre-dispatch: %+v", machine)
 						}
-					} else if machine.Code != errs.CodeVerificationFailed || machine.Outcome != errs.WriteOutcomeUnknown || !machine.WriteMayHaveLanded || machine.RetrySafe || machine.AcceptedByProvider || machine.ConfirmedAfterWrite || machine.Succeeded {
+					} else if machine.Code != errs.CodeVerificationFailed || machine.Outcome != errs.WriteOutcomeUnknown || !machine.MayHaveLanded || machine.Retry || machine.AcceptedByProvider || machine.ConfirmedAfterWrite || machine.Succeeded {
 						t.Fatalf("unconfirmed write: %+v", machine)
 					}
 				}

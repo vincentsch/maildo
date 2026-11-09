@@ -346,6 +346,9 @@ For changes, the error says whether anything happened:
   again. After an `unknown` send, look in the Sent folder and ask the user
   before you send again, because a second try could deliver the mail twice.
 
+Errors also have `retry_safe` and `write_may_have_landed`. A result that
+worked has `outcome: succeeded` and neither of them.
+
 A change to many messages reports each message on its own.
 
 Every change, every draft and every send is written to the action log in

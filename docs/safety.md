@@ -333,7 +333,11 @@ included.
 In a terminal you see this as a sentence after the error. JSON errors have
 it in `outcome`, together with `retry_safe` and `write_may_have_landed`. A
 change to many messages reports each message, and the error lists the ones
-that did not change.
+that did not change. A row that failed has its `outcome`, and its
+`error_details` have the other two.
+
+A change that worked says `outcome: succeeded` and has neither of the two
+fields. They only matter when something went wrong.
 
 ## Reading mail
 

@@ -1730,6 +1730,9 @@ func mutationErrorDetailsAndFacts(err error) (map[string]any, *mail.WriteOutcome
 	return stripWriteOutcomeDetailKeys(details), mail.CloneWriteOutcomeFacts((*mail.WriteOutcomeFacts)(facts))
 }
 
+// stripWriteOutcomeDetailKeys drops the outcome facts that the row has
+// itself. write_may_have_landed and retry_safe stay in the details, because
+// only a failed row needs them.
 func stripWriteOutcomeDetailKeys(details map[string]any) map[string]any {
 	if len(details) == 0 {
 		return nil
@@ -1737,7 +1740,7 @@ func stripWriteOutcomeDetailKeys(details map[string]any) map[string]any {
 	out := make(map[string]any, len(details))
 	for k, v := range details {
 		switch k {
-		case "outcome", "write_may_have_landed", "retry_safe", "accepted_by_provider", "confirmed_after_write", "succeeded":
+		case "outcome", "accepted_by_provider", "confirmed_after_write", "succeeded":
 			continue
 		default:
 			out[k] = v

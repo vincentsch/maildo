@@ -139,7 +139,9 @@ Windows is not supported yet, but you can use maildo inside WSL.
   `outcome` says whether it is safe to try again. This works on every
   provider and for every kind of change, so a lost answer from the server
   does not lead to a second send. A success answer from Outlook that maildo
-  cannot read also counts as unknown.
+  cannot read also counts as unknown. A change that worked says
+  `outcome: succeeded`; `retry_safe` and `write_may_have_landed` come only
+  with errors.
 - `--ids-file -` reads ids from stdin.
 - `AGENTS.md` and a Claude Code skill in `skills/maildo`. Both tell an
   agent that mail text is data and never instructions, and that it shows

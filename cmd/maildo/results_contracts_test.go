@@ -177,10 +177,15 @@ func TestAppliedMutationFailureFlattensWriteOutcomeFacts(t *testing.T) {
 	if row.Status != "failed" || row.WriteOutcomeFacts == nil || row.Outcome != mail.WriteOutcomeUnknown || !row.WriteMayHaveLanded || !row.AcceptedByProvider {
 		t.Fatalf("row = %#v", row)
 	}
-	for _, key := range []string{"outcome", "write_may_have_landed", "retry_safe", "accepted_by_provider", "confirmed_after_write", "succeeded"} {
+	for _, key := range []string{"outcome", "accepted_by_provider", "confirmed_after_write", "succeeded"} {
 		if _, ok := row.ErrorDetails[key]; ok {
 			t.Fatalf("reserved write key %q nested in details %#v", key, row.ErrorDetails)
 		}
+	}
+	// Whether the change may have happened is told with the error, so a
+	// script finds it in error_details.
+	if row.ErrorDetails["write_may_have_landed"] != true || row.ErrorDetails["retry_safe"] != false {
+		t.Fatalf("error details = %#v", row.ErrorDetails)
 	}
 	if row.ErrorDetails["reason"] != string(errs.OutcomePostWriteReadFailed) || row.ErrorDetails["operation"] != string(errs.WriteGmailCopy) {
 		t.Fatalf("error details = %#v", row.ErrorDetails)
@@ -260,8 +265,14 @@ func TestWriteFactsFlattenInCommandDTOJSON(t *testing.T) {
 	if err := json.Unmarshal(body, &got); err != nil {
 		t.Fatal(err)
 	}
-	if got["outcome"] != string(mail.WriteOutcomeSucceeded) || got["write_may_have_landed"] != true || got["confirmed_after_write"] != true {
+	if got["outcome"] != string(mail.WriteOutcomeSucceeded) || got["confirmed_after_write"] != true {
 		t.Fatalf("json = %#v", got)
+	}
+	// A success does not carry the fields that only matter after a failure.
+	for _, key := range []string{"write_may_have_landed", "retry_safe"} {
+		if _, ok := got[key]; ok {
+			t.Fatalf("a successful result has %q: %#v", key, got)
+		}
 	}
 	if _, nested := got["write_outcome"]; nested {
 		t.Fatalf("write facts nested unexpectedly: %#v", got)

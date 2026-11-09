@@ -202,4 +202,6 @@ A change to several messages counts them in `counts`, with `total`,
 a `status`, and for each message that changed or was skipped, the `new_id`.
 On IMAP and Outlook a message that moves to another folder gets a new id.
 A row that failed has no `new_id`, because maildo cannot be sure where the
-message is. Its `outcome` says whether the change may have happened.
+message is. Its `outcome` says whether the change may have happened, and
+its `error_details` have `retry_safe` and `write_may_have_landed`. A
+change that worked has `outcome: succeeded` and none of those two fields.

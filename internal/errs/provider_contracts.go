@@ -71,10 +71,15 @@ const (
 	WriteOutcomeUnknown      WriteOutcome = "unknown"
 )
 
+// WriteOutcomeFacts say how a write ended. A result that worked shows only
+// the outcome and what the provider confirmed. WriteMayHaveLanded and
+// RetrySafe matter when a write failed, so they appear in the error's
+// details (and in error_details for one message of a bulk change), never
+// next to a success, where they would read like a warning.
 type WriteOutcomeFacts struct {
 	Outcome             WriteOutcome `json:"outcome"`
-	WriteMayHaveLanded  bool         `json:"write_may_have_landed"`
-	RetrySafe           bool         `json:"retry_safe"`
+	WriteMayHaveLanded  bool         `json:"-"`
+	RetrySafe           bool         `json:"-"`
 	AcceptedByProvider  bool         `json:"accepted_by_provider"`
 	ConfirmedAfterWrite bool         `json:"confirmed_after_write"`
 	Succeeded           bool         `json:"succeeded"`
