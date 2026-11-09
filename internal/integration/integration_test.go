@@ -723,7 +723,7 @@ func runSuite(t *testing.T, srv server) {
 		}
 	})
 
-	// The dogfood case: reply to the latest mail of a conversation that
+	// Reply to the latest mail of a conversation that
 	// already has your own reply in Sent. The preview shows the thread
 	// headers, and thread finds the new reply too.
 	t.Run("a sent reply joins its thread", func(t *testing.T) {
