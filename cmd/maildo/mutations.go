@@ -1150,6 +1150,15 @@ func (h *handlers) executeMutationPlan(f *rungrad.Factory, cmd *cobra.Command, a
 			preview := buildMutationPreview(targetSet, plan, folders, categoryChanges, applyCommand)
 			return f.WriteResult(preview, humanMutationPreview(f, preview, targetSet, plan))
 		}
+		if undoable(plan.Operation) {
+			// Outlook does not say which folder a moved message came from,
+			// so maildo looks it up first. The undo command needs it.
+			for i := range targetSet.Targets {
+				if targetSet.Targets[i].Account.Provider == "outlook" {
+					h.describeTargets(cmd.Context(), clientScope, targetSet.Targets[i:i+1], 1)
+				}
+			}
+		}
 		if !f.Flags.JSON && f.Flags.JQ == "" && f.Flags.Template == "" {
 			// People see the subject and sender of what changed.
 			limit := 1
@@ -1314,6 +1323,8 @@ func (h *handlers) applySingleMutation(f *rungrad.Factory, cmd *cobra.Command, c
 		summary := mail.SummaryFrom(*folder)
 		out.TargetFolder = &summary
 	}
+	out.ResultMessageID, out.SourceFolder = row.ResultMessageID, row.SourceFolder
+	out.UndoCommands = undoCommands(f, cmd, plan.Operation, []mail.AppliedMutationTarget{row})
 	return f.WriteResultWithMeta(out, mutationMeta(cmd.CommandPath(), out), humanMutationResult(f, out, target, plan))
 }
 
@@ -1360,9 +1371,11 @@ func (h *handlers) applyBulkMutation(f *rungrad.Factory, cmd *cobra.Command, cli
 		Counts:           outcome.Counts,
 		Targets:          outcome.Rows,
 		ActionLogStatus:  status,
+		UndoCommands:     undoCommands(f, cmd, plan.Operation, outcome.Rows),
 	}
 	if outcome.Counts.Failed > 0 || outcome.Counts.Skipped > 0 {
 		return bulkPartialFailureError{
+			undo:              result.UndoCommands,
 			operation:         string(plan.Operation),
 			selector:          set.Summary,
 			counts:            outcome.Counts,
@@ -1629,7 +1642,16 @@ func appliedTargetFromResult(target mutationTarget, op mail.MessageMutationOpera
 	row.InternetMessageID = internetID
 	row.Status = "succeeded"
 	row.ResultMessageID = result.ResultMessageID
+	if row.ResultMessageID == "" && movesMessage(op) {
+		// The id stayed the same, as on Gmail. new_id is still set, so a
+		// script finds the current id in one place.
+		row.ResultMessageID = messageID
+	}
 	row.SourceFolder = result.SourceFolder
+	if row.SourceFolder == nil && target.Summary != nil && target.Summary.Folder.ID != "" {
+		folder := target.Summary.Folder
+		row.SourceFolder = &folder
+	}
 	row.TargetFolder = result.TargetFolder
 	row.ReadState = result.ReadState
 	row.FlagState = result.FlagState
@@ -1638,6 +1660,16 @@ func appliedTargetFromResult(target mutationTarget, op mail.MessageMutationOpera
 	row.WriteOutcomeFacts = mail.CloneWriteOutcomeFacts(result.WriteOutcomeFacts)
 	row.ProviderMeta = cloneProviderMetadataForResult(result.ProviderMeta)
 	return row
+}
+
+// movesMessage reports whether op puts a message in another folder, or a
+// copy of it there.
+func movesMessage(op mail.MessageMutationOperation) bool {
+	switch op {
+	case mail.MutationMove, mail.MutationCopy, mail.MutationArchive, mail.MutationDelete, mail.MutationRestore, mail.MutationJunk:
+		return true
+	}
+	return false
 }
 
 func plannedTargetBase(target mutationTarget, op mail.MessageMutationOperation) mail.AppliedMutationTarget {

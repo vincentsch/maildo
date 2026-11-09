@@ -118,6 +118,11 @@ func TestOutlookMutationGraphRequests(t *testing.T) {
 			if result.Operation != tt.operation {
 				t.Fatalf("result operation = %#v", result)
 			}
+			// Graph does not say where the message was, so maildo read it
+			// first, for the undo command.
+			if len(result.UndoCommands) != 1 || !strings.Contains(result.UndoCommands[0], " --to inbox-id --id "+result.ResultMessageID) {
+				t.Fatalf("undo commands = %q (new id %q)", result.UndoCommands, result.ResultMessageID)
+			}
 			if !stringSliceContains(h.server.mailFolderRequestsSnapshot(), tt.aliasPath) {
 				t.Fatalf("alias %s not requested: %#v", tt.aliasPath, h.server.mailFolderRequestsSnapshot())
 			}

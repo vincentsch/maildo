@@ -25,7 +25,7 @@ type mutationResult struct {
 	Selector          mutationSelectorResult `json:"selector"`
 	MessageID         string                 `json:"message_id,omitempty"`
 	InternetMessageID string                 `json:"internet_message_id,omitempty"`
-	ResultMessageID   string                 `json:"result_message_id,omitempty"`
+	ResultMessageID   string                 `json:"new_id,omitempty"`
 	SourceFolder      *mail.FolderSummary    `json:"source_folder,omitempty"`
 	TargetFolder      *mail.FolderSummary    `json:"target_folder,omitempty"`
 	ReadState         *mail.BoolChange       `json:"read_state,omitempty"`
@@ -35,6 +35,9 @@ type mutationResult struct {
 	*mail.WriteOutcomeFacts
 	ProviderMeta    *mail.MutationProviderMetadata `json:"provider_metadata,omitempty"`
 	ActionLogStatus mail.ActionLogStatus           `json:"action_log_status,omitempty"`
+	// UndoCommands move the message back where it was, after a change
+	// that moved it to another folder.
+	UndoCommands []string `json:"undo_commands,omitempty"`
 }
 
 // categoryListResult is the JSON result of categories list. It picks the
@@ -61,6 +64,9 @@ type bulkMutationResult struct {
 	Counts          mail.BulkMutationCounts      `json:"counts"`
 	Targets         []mail.AppliedMutationTarget `json:"targets"`
 	ActionLogStatus mail.ActionLogStatus         `json:"action_log_status"`
+	// UndoCommands move the messages back where they were, one command
+	// for each folder they came from.
+	UndoCommands []string `json:"undo_commands,omitempty"`
 }
 
 // mutationResultFromProvider combines what maildo knows about the message
@@ -145,7 +151,7 @@ func mutationMeta(commandPath string, r mutationResult) output.Meta {
 		extra["message_id"] = r.MessageID
 	}
 	if r.ResultMessageID != "" {
-		extra["result_message_id"] = r.ResultMessageID
+		extra["new_id"] = r.ResultMessageID
 	}
 	if r.TargetFolder != nil && r.TargetFolder.ID != "" {
 		extra["target_folder_id"] = r.TargetFolder.ID
@@ -226,6 +232,7 @@ type bulkPartialFailureError struct {
 	mutationApplied   bool
 	exit              int
 	labels            map[string]string // id to "Subject" from Sender, for people
+	undo              []string          // moves the messages that did change back
 }
 
 func (e bulkPartialFailureError) Error() string {
@@ -253,6 +260,9 @@ func (e bulkPartialFailureError) ErrorDetails() any {
 	}
 	if code := firstTargetErrorCode(e.targets); code != "" {
 		details["underlying_error_code"] = code
+	}
+	if len(e.undo) > 0 {
+		details["undo_commands"] = e.undo
 	}
 	return details
 }

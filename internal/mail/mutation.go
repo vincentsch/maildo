@@ -1,10 +1,6 @@
 package mail
 
-import (
-	"time"
-
-	"github.com/vincentsch/maildo/internal/errs"
-)
+import "github.com/vincentsch/maildo/internal/errs"
 
 // MessageMutationOperation names a change to a message, such as archive. The
 // names appear in output and do not change.
@@ -160,7 +156,7 @@ type CategoryChange struct {
 // A field stays empty when the provider cannot know it for sure.
 type MessageMutationResult struct {
 	MessageID         string          `json:"message_id"`
-	ResultMessageID   string          `json:"result_message_id,omitempty"`
+	ResultMessageID   string          `json:"new_id,omitempty"`
 	InternetMessageID string          `json:"internet_message_id,omitempty"`
 	SourceFolder      *FolderSummary  `json:"source_folder,omitempty"`
 	TargetFolder      *FolderSummary  `json:"target_folder,omitempty"`
@@ -192,22 +188,6 @@ type BulkSelectorSummary struct {
 	MatchedAtLeast int    `json:"matched_at_least,omitempty"`
 }
 
-// PlannedMutationTarget is one message a bulk change will touch, as previews
-// and the action log show it. It holds no body.
-type PlannedMutationTarget struct {
-	Account           string                   `json:"account"`
-	Provider          string                   `json:"provider"`
-	Operation         MessageMutationOperation `json:"operation"`
-	ID                string                   `json:"id"`
-	InternetMessageID string                   `json:"internet_message_id,omitempty"`
-	Folder            *FolderSummary           `json:"folder,omitempty"`
-	From              Recipient                `json:"from,omitempty"`
-	Subject           string                   `json:"subject,omitempty"`
-	MessageTime       *time.Time               `json:"message_time,omitempty"`
-	IsRead            *bool                    `json:"is_read,omitempty"`
-	HasAttachments    *bool                    `json:"has_attachments,omitempty"`
-}
-
 // AppliedMutationTarget is how the change went for one message.
 type AppliedMutationTarget struct {
 	Account           string                   `json:"account"`
@@ -219,7 +199,7 @@ type AppliedMutationTarget struct {
 	Reason            string                   `json:"reason,omitempty"`
 	ErrorCode         string                   `json:"error_code,omitempty"`
 	ErrorDetails      map[string]any           `json:"error_details,omitempty"`
-	ResultMessageID   string                   `json:"result_message_id,omitempty"`
+	ResultMessageID   string                   `json:"new_id,omitempty"`
 	SourceFolder      *FolderSummary           `json:"source_folder,omitempty"`
 	TargetFolder      *FolderSummary           `json:"target_folder,omitempty"`
 	ReadState         *BoolChange              `json:"read_state,omitempty"`

@@ -1390,6 +1390,10 @@ func TestDeleteAndMoveToTrashUseTrashEndpoint(t *testing.T) {
 			if labels := api.messageLabels("g-trash"); !sameStrings(labels, []string{"TRASH"}) {
 				t.Fatalf("message labels = %#v", labels)
 			}
+			// The message left the inbox, so an undo puts it back there.
+			if result.SourceFolder == nil || result.SourceFolder.ID != "INBOX" {
+				t.Fatalf("source folder = %#v", result.SourceFolder)
+			}
 		})
 	}
 }

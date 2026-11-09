@@ -50,6 +50,7 @@ type gmailMessageMutationPlan struct {
 	Initial        []string
 	Final          []string
 	TargetFolder   *mail.FolderSummary
+	SourceFolder   *mail.FolderSummary
 	ReadState      *mail.BoolChange
 	FlagState      *mail.BoolChange
 	Categories     *mail.CategoryChange
@@ -556,6 +557,7 @@ func (c *Client) baseMessagePlan(op mail.MessageMutationOperation, writeOp errs.
 }
 
 func (c *Client) executeMessagePlan(ctx context.Context, snap labelSnapshot, plan gmailMessageMutationPlan) (mail.MessageMutationResult, error) {
+	plan.SourceFolder = sourceSystemFolder(snap, plan.Initial, plan.Final)
 	if sameStringSet(plan.Initial, plan.Final) || len(plan.Phases) == 0 {
 		changed := false
 		return c.messageMutationResult(plan, errs.VerifiedWriteNoOpFacts(), changed), nil
@@ -570,6 +572,22 @@ func (c *Client) executeMessagePlan(ctx context.Context, snap labelSnapshot, pla
 	}
 	changed := true
 	return c.messageMutationResult(plan, facts, changed), nil
+}
+
+// sourceSystemFolder is the inbox, Spam or Trash when a change takes the
+// message out of it, so maildo can say how to put it back. Gmail labels
+// have no single folder otherwise.
+func sourceSystemFolder(snap labelSnapshot, initial, final []string) *mail.FolderSummary {
+	for _, id := range []string{"INBOX", "SPAM", "TRASH"} {
+		if !hasLabel(initial, id) || hasLabel(final, id) {
+			continue
+		}
+		if folder, ok := snap.byID[id]; ok {
+			summary := mail.SummaryFrom(folder)
+			return &summary
+		}
+	}
+	return nil
 }
 
 func (c *Client) executeMessagePhases(ctx context.Context, snap labelSnapshot, attempt errs.ProviderWriteAttempt, plan gmailMessageMutationPlan) (*mail.WriteOutcomeFacts, error) {
@@ -714,7 +732,7 @@ func (c *Client) messageMutationResult(plan gmailMessageMutationPlan, facts *mai
 		WriteOutcomeFacts: mail.CloneWriteOutcomeFacts(facts),
 		ProviderMeta:      gmailMutationMeta(plan.Final),
 		ResultMessageID:   "",
-		SourceFolder:      nil,
+		SourceFolder:      cloneFolderSummary(plan.SourceFolder),
 		InternetMessageID: "",
 	}
 }

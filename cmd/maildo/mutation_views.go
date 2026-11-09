@@ -394,6 +394,27 @@ func humanMutationResult(f *rungrad.Factory, r mutationResult, target mutationTa
 		if newID != "" {
 			fmt.Fprintf(w, "Its id is now %s.\n", ids.of(target.Account.Name, newID))
 		}
+		from := ""
+		if r.SourceFolder != nil {
+			from = folderSummaryText(*r.SourceFolder)
+		}
+		writeUndo(w, "it", from, r.UndoCommands)
+	}
+}
+
+// writeUndo prints the commands that move the messages back. from names
+// the folder when they all came from one.
+func writeUndo(w io.Writer, object, from string, commands []string) {
+	if len(commands) == 0 {
+		return
+	}
+	if from != "" && len(commands) == 1 {
+		fmt.Fprintf(w, "To move %s back to %s, run:\n", object, plainField(from))
+	} else {
+		fmt.Fprintf(w, "To move %s back, run:\n", object)
+	}
+	for _, c := range commands {
+		fmt.Fprintln(w, "  "+c)
 	}
 }
 
@@ -460,6 +481,22 @@ func humanBulkResult(f *rungrad.Factory, r bulkMutationResult, set mutationTarge
 		if extra := len(r.Targets) - maxListedResults; extra > 0 {
 			fmt.Fprintf(w, "  and %s more\n", thousands(extra))
 		}
+		from := map[string]bool{}
+		for _, row := range r.Targets {
+			if row.SourceFolder != nil {
+				from[folderSummaryText(*row.SourceFolder)] = true
+			}
+		}
+		source := ""
+		if len(from) == 1 {
+			for name := range from {
+				source = name
+			}
+		}
+		if len(r.UndoCommands) > 0 {
+			fmt.Fprintln(w)
+		}
+		writeUndo(w, "them", source, r.UndoCommands)
 	}
 }
 
@@ -584,11 +621,108 @@ func applyCommandFor(f *rungrad.Factory, cmd *cobra.Command, set mutationTargetS
 			return line, nil
 		}
 	}
-	path, err := writePreviewIDs(f, cmd, set.Targets, len(accounts) > 1)
+	qualified := len(accounts) > 1
+	lines := make([]string, 0, len(set.Targets))
+	for _, t := range set.Targets {
+		if qualified {
+			lines = append(lines, t.Account.Name+"\t"+t.MessageID)
+		} else {
+			lines = append(lines, t.MessageID)
+		}
+	}
+	path, err := writePreviewIDs(f, previewIDsFilePrefix(cmd), lines)
 	if err != nil {
 		return "", err
 	}
 	return commandLine(cmd, nil, selectorFlagNames, append(base, [2]string{"ids-file", path}, [2]string{"apply", ""})), nil
+}
+
+// undoable reports whether op takes messages out of their folder, so its
+// result can say how to move them back.
+func undoable(op mail.MessageMutationOperation) bool {
+	switch op {
+	case mail.MutationArchive, mail.MutationMove, mail.MutationDelete, mail.MutationJunk, mail.MutationRestore:
+		return true
+	}
+	return false
+}
+
+// undoCommands are the commands that move changed messages back to the
+// folders they came from: one maildo move for each account and folder.
+// Messages that did not move, and messages whose folder maildo does not
+// know, are left out.
+func undoCommands(f *rungrad.Factory, cmd *cobra.Command, op mail.MessageMutationOperation, rows []mail.AppliedMutationTarget) []string {
+	if !undoable(op) {
+		return nil
+	}
+	type group struct {
+		account, folder string
+		ids             []string
+	}
+	var groups []*group
+	byKey := map[string]*group{}
+	for _, row := range rows {
+		if row.Status != "succeeded" || (row.Changed != nil && !*row.Changed) || row.SourceFolder == nil {
+			continue
+		}
+		folder := folderArg(*row.SourceFolder)
+		if folder == "" {
+			continue
+		}
+		key := row.Account + "\x00" + folder
+		g := byKey[key]
+		if g == nil {
+			g = &group{account: row.Account, folder: folder}
+			byKey[key] = g
+			groups = append(groups, g)
+		}
+		g.ids = append(g.ids, firstNonEmpty(row.ResultMessageID, row.ID))
+	}
+	var out []string
+	for _, g := range groups {
+		line, err := undoCommand(f, cmd, g.account, g.folder, g.ids)
+		if err != nil {
+			f.Infof("Warning: maildo could not write the undo command for %s: %v", g.folder, err)
+			continue
+		}
+		out = append(out, line)
+	}
+	return out
+}
+
+// undoCommand moves ids back to folder. Like an apply command, it names
+// the account and the exact messages, and many ids go into a file.
+func undoCommand(f *rungrad.Factory, cmd *cobra.Command, account, folder string, ids []string) (string, error) {
+	head := []string{"maildo", "move"}
+	if flag := cmd.Flags().Lookup("config"); flag != nil && flag.Changed {
+		head = append(head, "--config", shellQuote(flag.Value.String()))
+	}
+	head = append(head, "--account", shellQuote(account), "--to", shellQuote(folder))
+	var tail []string
+	if len(ids) > 1 {
+		tail = append(tail, "--apply")
+	}
+	if f.Flags.JSON || f.Flags.JQ != "" || f.Flags.Template != "" {
+		tail = append(tail, "--json")
+	}
+	parts := append([]string(nil), head...)
+	for _, id := range ids {
+		parts = append(parts, "--id", shellQuote(id))
+	}
+	if line := strings.Join(append(parts, tail...), " "); len(ids) == 1 || len(line) <= maxInlineApplyCommand {
+		return line, nil
+	}
+	path, err := writePreviewIDs(f, "move", ids)
+	if err != nil {
+		return "", err
+	}
+	return strings.Join(append(append(head, "--ids-file", shellQuote(path)), tail...), " "), nil
+}
+
+// folderArg names a folder for --to: by its standard name when it has one,
+// else by its path, else by its id.
+func folderArg(folder mail.FolderSummary) string {
+	return firstNonEmpty(folder.WellKnownName, folder.Path, folder.ID)
 }
 
 const (
@@ -596,11 +730,12 @@ const (
 	previewMaxAge = 7 * 24 * time.Hour
 )
 
-// writePreviewIDs saves the ids of a previewed change for its apply
-// command, one per line (account, tab, id when several accounts are
-// involved). It also clears out files older than a week. This happens even
-// with --dry-run, since the printed command needs the file.
-func writePreviewIDs(f *rungrad.Factory, cmd *cobra.Command, targets []mutationTarget, qualified bool) (string, error) {
+// writePreviewIDs saves the ids for an apply or undo command, one line
+// each (account, tab, id when several accounts are involved). prefix names
+// the command that may read the file. It also clears out files older than
+// a week. This happens even with --dry-run, since the printed command
+// needs the file.
+func writePreviewIDs(f *rungrad.Factory, prefix string, lines []string) (string, error) {
 	dir := filepath.Join(filepath.Dir(f.ConfigPath()), previewsDir)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return "", errs.NewWithDetails(errs.CodeResourceLimitExceeded, "could not save the ids for the apply command", map[string]any{"cause": err.Error()})
@@ -613,14 +748,11 @@ func writePreviewIDs(f *rungrad.Factory, cmd *cobra.Command, targets []mutationT
 		}
 	}
 	var b strings.Builder
-	for _, t := range targets {
-		if qualified {
-			b.WriteString(t.Account.Name + "\t")
-		}
-		b.WriteString(t.MessageID + "\n")
+	for _, line := range lines {
+		b.WriteString(line + "\n")
 	}
 	sum := sha256.Sum256([]byte(b.String()))
-	name := fmt.Sprintf("%s-%s-%s.txt", previewIDsFilePrefix(cmd), time.Now().Format("20060102-150405"), hex.EncodeToString(sum[:])[:8])
+	name := fmt.Sprintf("%s-%s-%s.txt", prefix, time.Now().Format("20060102-150405"), hex.EncodeToString(sum[:])[:8])
 	path := filepath.Join(dir, name)
 	if err := os.WriteFile(path, []byte(b.String()), 0o600); err != nil {
 		return "", errs.NewWithDetails(errs.CodeResourceLimitExceeded, "could not save the ids for the apply command", map[string]any{"cause": err.Error()})
