@@ -10,13 +10,16 @@ import (
 // commandLine rebuilds the command the user ran, so maildo can print the
 // exact command for the next step: the same search with --page 3, or a
 // bulk preview with --apply. drop removes flags; set adds or replaces them
-// ("" as the value means a bool flag that is switched on).
+// ("" as the value means a bool flag that is switched on). --jq and
+// --template never carry over, because a filter written for this output
+// does not fit the output of the next step. The command gets --json in
+// their place.
 func commandLine(cmd *cobra.Command, args []string, drop []string, set [][2]string) string {
 	parts := strings.Fields(cmd.CommandPath())
 	for _, arg := range args {
 		parts = append(parts, shellQuote(arg))
 	}
-	skip := map[string]bool{}
+	skip := map[string]bool{"jq": true, "template": true}
 	for _, name := range drop {
 		skip[name] = true
 	}
@@ -61,6 +64,11 @@ func commandLine(cmd *cobra.Command, args []string, drop []string, set [][2]stri
 			parts = append(parts, "--"+flag.Name, shellQuote(flag.Value.String()))
 		}
 	})
+	if filtered := flags.Lookup("jq") != nil && flags.Changed("jq") || flags.Lookup("template") != nil && flags.Changed("template"); filtered && !skip["json"] {
+		if json := flags.Lookup("json"); json == nil || !json.Changed || json.Value.String() != "true" {
+			parts = append(parts, "--json")
+		}
+	}
 	for _, pair := range set {
 		if pair[1] == "" {
 			parts = append(parts, "--"+pair[0])
