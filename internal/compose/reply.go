@@ -255,6 +255,9 @@ func buildShortReplyBody(plan ReplyPlan, source replyQuoteSource) mail.OutboundB
 	}
 }
 
+// joinBodies puts one empty line between the user's text and the quote. A
+// body from a file usually ends with a line break; it does not add a
+// second empty line.
 func joinBodies(user, quoted string) string {
 	switch {
 	case user == "":
@@ -262,7 +265,7 @@ func joinBodies(user, quoted string) string {
 	case quoted == "":
 		return user
 	default:
-		return user + "\n\n" + quoted
+		return strings.TrimRight(user, "\r\n") + "\n\n" + quoted
 	}
 }
 

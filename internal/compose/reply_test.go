@@ -229,3 +229,35 @@ func env(values map[string]string) func(string) (string, bool) {
 		return value, ok
 	}
 }
+
+// A body that ends with line breaks, as a file usually does, gets exactly
+// one empty line before the quote, in every quote mode and in forwards.
+func TestOneEmptyLineBeforeTheQuote(t *testing.T) {
+	source := replyTestSource()
+	for _, body := range []string{"Hi Maria,\n\nthanks!\n\nBest,\nSam", "Hi Maria,\n\nthanks!\n\nBest,\nSam\n", "Hi Maria,\n\nthanks!\n\nBest,\nSam\r\n\r\n"} {
+		for _, quote := range []string{"full", "short"} {
+			plan, err := BuildReply(ReplyOptions{Quote: quote, QuoteLanguage: "en", Body: BodyInput{FileSet: true, Bytes: []byte(body)}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := BuildReplyBody(plan, source)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.HasPrefix(got.Text, "Hi Maria,\n\nthanks!\n\nBest,\nSam\n\nOn ") {
+				t.Errorf("%s quote of %q = %q", quote, body, got.Text)
+			}
+		}
+		plan, err := BuildForward(ForwardOptions{Body: BodyInput{FileSet: true, Bytes: []byte(body)}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		got, err := BuildForwardBody(plan, source)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.HasPrefix(got.Text, "Hi Maria,\n\nthanks!\n\nBest,\nSam\n\n---------- Forwarded message") {
+			t.Errorf("forward of %q = %q", body, got.Text)
+		}
+	}
+}

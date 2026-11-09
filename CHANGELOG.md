@@ -114,7 +114,8 @@ Windows is not supported yet, but you can use maildo inside WSL.
   `send --attach` works on Outlook up to 3 MB of attachments. On Outlook,
   `reply --send --dry-run` saves the reply as a draft and shows that draft.
 - A quoted reply starts the quote with "On <date>, <sender> wrote:", in
-  English or German (`--quote-language`).
+  English or German (`--quote-language`). One empty line separates your
+  text from the quote, also when the body file ends with a line break.
 - Replies, forwards and draft sends use your `sender_name`. `--subject`
   refuses line breaks and control characters.
 - Account policies: `read_only`, `drafts_only`, `allow_recipients`,
