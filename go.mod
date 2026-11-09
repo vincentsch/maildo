@@ -11,10 +11,10 @@ require (
 	github.com/spf13/pflag v1.0.9
 	github.com/vincentsch/rungrad v0.3.5
 	github.com/yuin/goldmark v1.8.2
-	golang.org/x/net v0.35.0
-	golang.org/x/sys v0.30.0
-	golang.org/x/term v0.29.0
-	golang.org/x/text v0.22.0
+	golang.org/x/net v0.62.0
+	golang.org/x/sys v0.49.0
+	golang.org/x/term v0.47.0
+	golang.org/x/text v0.44.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
