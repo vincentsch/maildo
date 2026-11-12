@@ -12,7 +12,7 @@ var (
 	commit  = "unknown"
 )
 
-// A binary from "go install ...@v0.1.0" has no -ldflags, so it takes the
+// A binary from "go install ...@vX.Y.Z" has no -ldflags, so it takes the
 // version from the module instead of reporting dev.
 func init() {
 	if version != "dev" {

@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- A maildo from `go install ...@v0.1.0` reports its version instead of dev.
+## 0.1.1 - 2026-11-12
+
+- Binaries installed with `go install` report their release version instead of `dev`.
 
 ## 0.1.0 - 2026-11-09
 
